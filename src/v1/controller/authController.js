@@ -37,7 +37,8 @@ const logout = (req, res, next) => {
     res.clearCookie('authToken', {
       httpOnly: true,
       secure: false, // Set `true` in production for HTTPS
-      sameSite: 'None',
+      // sameSite: 'Lax',
+      sameSite: 'Strict',
     });
 
     res.status(200).success('Logout successful',null );
