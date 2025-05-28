@@ -24,7 +24,7 @@ const login = async (req, res, next) => {
       // sameSite: 'Strict',
       maxAge:  24 * 60 * 60 * 1000,// Cookie  valid for 1 day
     });
-    res.status(200).success('Login successful', data.user );
+    res.status(200).success('Login successful', {...data.user, Token:data.token} );
     
   } catch (error) {
     console.log("Auth Error",error)

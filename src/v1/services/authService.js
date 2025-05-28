@@ -64,7 +64,10 @@ const loginUser = async (email, password) => {
 
     return {user,token};
   } catch (error) {
-    console.error("Error stack:", error.stack);
+    if (error instanceof CustomError) {
+      // Let known custom errors pass through
+      throw error;
+  }
     throw new CustomError( error.message ||'Failed to login user',error.status||500);
   }
 };
