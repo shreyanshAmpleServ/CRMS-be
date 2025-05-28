@@ -164,8 +164,11 @@ const findUserByEmail = async (email) => {
 
         return await getUserWithRole(user.id,true);
     } catch (error) {
-        console.log(error);
-        throw new CustomError(`Error finding user by email: ${error.message}`, 503);
+        if (error instanceof CustomError) {
+            // Let known custom errors pass through
+            throw error;
+        }
+        throw new CustomError(`Error : ${error.message}`, 503);
     }
 };
 
