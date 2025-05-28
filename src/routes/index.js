@@ -48,6 +48,7 @@ const contactReportRoutes = require("../v1/routes/contactReportRoutes")
 const companyReportRoutes = require("../v1/routes/companyReportRoutes")
 const projectReportRoutes = require("../v1/routes/projectReportRoutes")
 const TaskReportRoutes = require("../v1/routes/TaskReportRoutes")
+const menuRoute = require("../v1/routes/menuRoute")
 
 const router = express.Router();
 
@@ -102,6 +103,7 @@ router.use('/v1',contactReportRoutes);
 router.use('/v1',companyReportRoutes);
 router.use('/v1',projectReportRoutes);
 router.use('/v1',TaskReportRoutes);
+router.use('/v1',menuRoute);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

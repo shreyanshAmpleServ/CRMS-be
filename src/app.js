@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Support URL-encoded bodies
 app.use(cookieParser());
 app.use(cors({
-    origin:  ['http://crms.dcctz.com:81' ,'http://localhost:3000',"http://192.168.29.55:3000","http://10.160.5.101:3000"] ,// Replace with your frontend URL
+    origin:  ['http://crms.dcctz.com:81', 'http://192.168.29.127:3000' ,'http://localhost:3000',"http://192.168.29.55:3000","http://10.160.5.101:3000"] ,// Replace with your frontend URL
     credentials: true, // Allow cookies to be sent
 }));
 

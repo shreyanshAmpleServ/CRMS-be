@@ -97,6 +97,7 @@ model crms_m_module {
   updatedate             DateTime?                @db.DateTime
   createdby              Int                      @default(1, map: "DF__crms_m_mo__creat__3C69FB99")
   updatedby              Int?
+  module_path            String?                  @db.NChar(50)
   crms_d_role_permission crms_d_role_permission[]
 }
 
@@ -943,15 +944,14 @@ model crms_d_role_permissions {
 }
 
 model crms_m_product_category {
-  id           Int               @id(map: "PK__crms_m_p__3213E83F16DBC85B") @default(autoincrement())
-  name         String            @db.NVarChar(100)
-  is_active    String            @default("Y", map: "DF__crms_m_pr__is_ac__2FBA0BF1") @db.Char(1)
-  createdate   DateTime          @default(now(), map: "DF__crms_m_pr__creat__30AE302A") @db.DateTime
-  updatedate   DateTime?         @db.DateTime
-  createdby    Int               @default(1, map: "DF__crms_m_pr__creat__31A25463")
-  updatedby    Int?
-  log_inst     Int?
-  product_cats crms_m_products[]
+  id         Int       @id(map: "PK__crms_m_p__3213E83F16DBC85B") @default(autoincrement())
+  name       String    @db.NVarChar(100)
+  is_active  String    @default("Y", map: "DF__crms_m_pr__is_ac__2FBA0BF1") @db.Char(1)
+  createdate DateTime  @default(now(), map: "DF__crms_m_pr__creat__30AE302A") @db.DateTime
+  updatedate DateTime? @db.DateTime
+  createdby  Int       @default(1, map: "DF__crms_m_pr__creat__31A25463")
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model crms_m_products {
@@ -961,7 +961,6 @@ model crms_m_products {
   description                   String?                         @db.NVarChar(200)
   is_active                     String                          @default("Y", map: "DF__crms_m_pr__is_ac__2AF556D4") @db.Char(1)
   vendor_id                     Int?
-  category                      Int?
   manufacturer_id               Int?
   tax_id                        Int?
   unit_price                    Decimal?                        @db.Decimal(19, 4)
@@ -976,6 +975,7 @@ model crms_m_products {
   updatedby                     Int?
   log_inst                      Int?
   product_image                 String?                         @db.NVarChar(255)
+  category                      String?                         @db.NChar(10)
   case_product                  crms_d_cases[]
   invoice_item_product          crms_d_invoice_items[]
   order_item_product            crms_d_order_items[]
@@ -983,7 +983,6 @@ model crms_m_products {
   purchase_order_item_product   crms_d_purchase_order_items[]
   quotation_item_product        crms_d_quotation_items[]
   solution_product              crms_d_solution[]
-  product_cats                  crms_m_product_category?        @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction)
   Currency                      Currency?                       @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
   manufacturer                  crms_m_manufacturer?            @relation(fields: [manufacturer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   vendor                        crms_m_vendor?                  @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1456,4 +1455,147 @@ model CampaignContacts {
   camp_contact crms_m_contact  @relation(fields: [contact_id], references: [id], onUpdate: NoAction)
 
   @@map("crms_d_campaign_contacts")
+}
+
+model sales_d_approval_status {
+  id               Int       @id(map: "PK__sales_d___3213E83F99BAD06B") @default(autoincrement())
+  entity_type      String?   @db.VarChar(50)
+  entity_id        Int?
+  approver_user_id Int?
+  approval_stage   Int?
+  approval_status  String?   @default("Pending", map: "DF__sales_d_a__appro__0E44098D") @db.VarChar(20)
+  remarks          String?   @db.Text
+  action_date      DateTime? @db.DateTime
+}
+
+model sales_d_attachment {
+  id          Int       @id(map: "PK__sales_d___3213E83FB670D930") @default(autoincrement())
+  entity_type String?   @db.VarChar(50)
+  entity_id   Int?
+  file_name   String?   @db.VarChar(255)
+  file_path   String?   @db.VarChar(500)
+  uploaded_by Int?
+  uploaded_on DateTime? @default(now(), map: "DF__sales_d_a__uploa__07970BFE") @db.DateTime
+}
+
+model sales_d_blanket_agreement {
+  id                             Int                              @id(map: "PK__sales_d___3213E83FDE4C8461")
+  customer_code                  String?                          @db.VarChar(20)
+  customer_name                  String?                          @db.VarChar(100)
+  contact_person_id              Int?
+  start_date                     DateTime?                        @db.Date
+  end_date                       DateTime?                        @db.Date
+  termination_date               DateTime?                        @db.Date
+  description                    String?                          @db.VarChar(255)
+  agreement_type                 String?                          @db.VarChar(20)
+  status                         String?                          @db.VarChar(20)
+  owner_id                       Int?
+  renewal_flag                   String?                          @db.Char(1)
+  use_discount_flag              String?                          @db.Char(1)
+  reminder_value                 Int?
+  reminder_unit                  String?                          @db.VarChar(10)
+  remarks                        String?                          @db.Text
+  attachment_id                  Int?
+  log_instance                   Int?
+  created_by                     Int?
+  created_on                     DateTime?                        @db.DateTime
+  modified_by                    Int?
+  modified_on                    DateTime?                        @db.DateTime
+  cancelled_flag                 String?                          @db.Char(1)
+  data_source                    String?                          @db.VarChar(5)
+  transferred_flag               String?                          @db.Char(1)
+  reminder_flag                  String?                          @db.Char(1)
+  fulfilled_flag                 String?                          @db.Char(1)
+  attachment_path                String?                          @db.VarChar(255)
+  settle_probability             Decimal?                         @db.Decimal(5, 2)
+  modified_time                  String?                          @db.VarChar(8)
+  fulfillment_method             String?                          @db.VarChar(10)
+  payment_terms_id               Int?
+  price_list_id                  Int?
+  signing_date                   DateTime?                        @db.Date
+  amended_to_id                  Int?
+  series_id                      Int?
+  document_number                String?                          @db.VarChar(30)
+  object_type                    String?                          @db.VarChar(20)
+  handwritten_flag               String?                          @db.Char(1)
+  project_indicator              String?                          @db.VarChar(20)
+  bp_type                        String?                          @db.VarChar(10)
+  instance_id                    Int?
+  payment_method                 String?                          @db.VarChar(20)
+  customer_ref_no                String?                          @db.VarChar(30)
+  bp_currency                    String?                          @db.VarChar(10)
+  fixed_exchange_rate            Decimal?                         @db.Decimal(18, 4)
+  transportation_code            Int?
+  project_code                   String?                          @db.VarChar(20)
+  price_mode                     String?                          @db.VarChar(10)
+  workflow_status                String?                          @db.VarChar(20)
+  from_status                    String?                          @db.VarChar(20)
+  dpp_status                     String?                          @db.VarChar(20)
+  createdate                     DateTime?                        @default(now(), map: "DF__sales_d_b__creat__11207638") @db.DateTime
+  createdby                      Int
+  updatedate                     DateTime?                        @db.DateTime
+  updatedby                      Int?
+  log_inst                       Int?
+  sales_d_blanket_agreement_line sales_d_blanket_agreement_line[]
+}
+
+model sales_d_blanket_agreement_line {
+  id                        Int                        @id(map: "PK__sales_d___3213E83F16840867")
+  parent_id                 Int?
+  line_no                   Int?
+  item_code                 String?                    @db.VarChar(50)
+  description               String?                    @db.VarChar(255)
+  quantity                  Decimal?                   @db.Decimal(18, 4)
+  delivered_qty             Decimal?                   @db.Decimal(18, 4)
+  open_qty                  Decimal?                   @db.Decimal(18, 4)
+  uom                       String?                    @db.VarChar(20)
+  unit_price                Decimal?                   @db.Decimal(18, 4)
+  currency_code             String?                    @db.VarChar(10)
+  line_total                Decimal?                   @db.Decimal(18, 2)
+  warehouse_id              Int?
+  required_date             DateTime?                  @db.Date
+  need_by_date              DateTime?                  @db.Date
+  project_code              String?                    @db.VarChar(50)
+  budget_code               String?                    @db.VarChar(50)
+  gl_account_code           String?                    @db.VarChar(20)
+  tax_code                  String?                    @db.VarChar(10)
+  line_status               String?                    @db.VarChar(20)
+  remarks                   String?                    @db.VarChar(255)
+  base_type                 String?                    @db.VarChar(10)
+  base_entry                Int?
+  base_line                 Int?
+  target_type               String?                    @db.VarChar(10)
+  target_entry              Int?
+  target_line               Int?
+  vis_order                 Int?
+  line_type                 String?                    @db.VarChar(10)
+  tree_type                 String?                    @db.VarChar(5)
+  manual_batch_num          String?                    @db.VarChar(50)
+  uom_entry                 Int?
+  uom_code                  String?                    @db.VarChar(10)
+  planned_qty               Decimal?                   @db.Decimal(18, 4)
+  open_planned_qty          Decimal?                   @db.Decimal(18, 4)
+  sales_d_blanket_agreement sales_d_blanket_agreement? @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__sales_d_b__paren__13FCE2E3")
+}
+
+model sales_d_user_ownership {
+  id                  Int       @id(map: "PK__sales_d___3213E83FA816EB17") @default(autoincrement())
+  entity_type         String?   @db.VarChar(50)
+  entity_id           Int?
+  owner_user_id       Int?
+  shared_with_user_id Int?
+  role_type           String?   @default("Owner", map: "DF__sales_d_u__role___0A7378A9") @db.VarChar(20)
+  assigned_on         DateTime? @default(now(), map: "DF__sales_d_u__assig__0B679CE2") @db.DateTime
+}
+
+model crms_menus {
+  id             Int          @id @default(autoincrement())
+  menu_label     String?      @db.VarChar(100)
+  routes         String?
+  icon           String?
+  parent_menu_id Int?
+  is_active      String       @db.Char(1)
+  order_by       Int?
+  parent_menu    crms_menus?  @relation("menuDetails", fields: [parent_menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates   crms_menus[] @relation("menuDetails")
 }

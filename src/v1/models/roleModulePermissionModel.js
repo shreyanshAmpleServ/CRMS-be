@@ -253,6 +253,7 @@ const allModules = await prisma.crms_m_module.findMany({
   select: {
     id: true,
     module_name: true,
+    module_path: true,
   },
 });
 
@@ -278,11 +279,13 @@ savedPermissions =  parsePermissions(savedPermissions)
        { 
         module_id: module.id,
         module_name: module.module_name,
+        module_path: module.module_path,
         permissions:existingModuleChange?.permissions 
       }
       : {
             module_id: module.id,
             module_name: module.module_name,
+            module_path: module.module_path,
             permissions: { view: false, update: false, create: false, delete: false },
           };
     });
@@ -309,51 +312,6 @@ savedPermissions =  parsePermissions(savedPermissions)
     throw new Error("Error retrieving permissions");
   }
 };
-// const getAllPermission = async (id) => {
-//   const role_id = Number(id);
-
-//   try {
-//     // Fetch saved permissions for this role
-//     const savedPermissions = await prisma.crms_d_role_permissions.findUnique({
-//       where: { role_id },
-//       select: {
-//         permissions: true, // Assuming permissions are stored in JSON format
-//       },
-//     });
-
-//     // Fetch all available modules
-//     const allModules = await prisma.crms_m_module.findMany({
-//       select: {
-//         id: true,
-//         module_name: true,
-//       },
-//     });
-
-//     // If permissions exist, use them; otherwise, start fresh
-//     let existingPermissions = savedPermissions ? savedPermissions.permissions : [];
-
-//     // Ensure all modules are included, keeping existing ones and adding new ones
-//     const updatedPermissions = allModules.map((module) => {
-//       const existingModulePermission = existingPermissions.find((perm) => perm.module_id === module.id);
-      
-//       return existingModulePermission
-//         ? existingModulePermission // Keep existing permissions
-//         : {
-//             module_id: module.id,
-//             module_name: module.module_name,
-//             permissions: { view: false, update: false, create: false, delete: false },
-//           };
-//     });
-
-//     return {
-//       role_id: role_id || null,
-//       permissions: updatedPermissions,
-//     };
-//   } catch (error) {
-//     console.error("Error retrieving permissions:", error);
-//     throw new Error("Error retrieving permissions");
-//   }
-// };
 
  
 module.exports = {
