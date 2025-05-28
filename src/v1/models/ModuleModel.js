@@ -2,9 +2,25 @@ const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
 const prisma = new PrismaClient();
 
+const validateModuleNameUniqueness = async (module_name) => {
+  const existingModule = await prisma.crms_m_module.findFirst({
+    where: {
+      module_name: {
+        equals: module_name,
+        // mode: 'insensitive', // case-insensitive match
+      },
+    },
+  });
+
+  if (existingModule) {
+    throw new CustomError(`Module name "${module_name}" already exists.`, 400);
+  }
+};
+
 // Create a new Module Related To 
 const createModuleRelatedTo = async (data) => {
     try {
+        await validateModuleNameUniqueness(data.module_name);
         const calls = await prisma.crms_m_module.create({
             data: {
                 ...data,
