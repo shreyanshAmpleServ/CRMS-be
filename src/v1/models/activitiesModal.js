@@ -27,7 +27,10 @@ const getActivityType = async () => {
     });
     return activityTypes;
   } catch (error) {
-    throw new CustomError("Error retrieving activity Type", 503);
+    throw new CustomError(
+      error.message || "Error retrieving activity Type",
+      error.status || 503
+    );
   }
 };
 
@@ -57,29 +60,29 @@ const createActivities = async (data) => {
           select: {
             id: true,
             full_name: true,
-            profile_img:true,
+            profile_img: true,
           },
         },
         deal_of_activity: {
-            select: {
-              id: true,
-              dealName: true,
-              dealValue: true,
-            },
+          select: {
+            id: true,
+            dealName: true,
+            dealValue: true,
           },
-          company_of_activity: {
-            select: {
-              id: true,
-              name: true,
-            },
+        },
+        company_of_activity: {
+          select: {
+            id: true,
+            name: true,
           },
-          contact_of_activity: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+        },
+        contact_of_activity: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
+        },
       },
     });
     const { crms_m_activitytypes, crms_m_user, ...rest } = activitiesStatus;
@@ -91,8 +94,8 @@ const createActivities = async (data) => {
   } catch (error) {
     console.log("Error in Create Activities", error);
     throw new CustomError(
-      `Error creating activity status: ${error.message}`,
-      500
+      error.message || `Error creating activity status: ${error.message}`,
+      error.status || 500
     );
   }
 };
@@ -113,29 +116,29 @@ const updateActivities = async (id, data) => {
           select: {
             id: true,
             full_name: true,
-            profile_img:true,
+            profile_img: true,
           },
         },
         deal_of_activity: {
-            select: {
-              id: true,
-              dealName: true,
-              dealValue: true,
-            },
+          select: {
+            id: true,
+            dealName: true,
+            dealValue: true,
           },
-          company_of_activity: {
-            select: {
-              id: true,
-              name: true,
-            },
+        },
+        company_of_activity: {
+          select: {
+            id: true,
+            name: true,
           },
-          contact_of_activity: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-            },
+        },
+        contact_of_activity: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
           },
+        },
       },
       data: updatedData,
     });
@@ -147,15 +150,17 @@ const updateActivities = async (id, data) => {
     };
   } catch (error) {
     console.log("Updating activity Error:", data);
-    throw new CustomError(`Error updating activitiess: ${error.message}`, 500);
+    throw new CustomError(
+      error.message || `Error updating activitiess: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
 // Get all Activities statuses
 const getAllActivities = async (reqBody) => {
   try {
-
-    page = (!reqBody?.page || (reqBody?.page == 0)) ?  1 : reqBody?.page ;
+    page = !reqBody?.page || reqBody?.page == 0 ? 1 : reqBody?.page;
     size = reqBody?.size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -178,14 +183,15 @@ const getAllActivities = async (reqBody) => {
         },
       ];
     }
-    if(reqBody.filter2){ 
+    if (reqBody.filter2) {
       filters.crms_m_activitytypes = {
         is: {
           name: {
-            equals: reqBody.filter2
+            equals: reqBody.filter2,
           },
         },
-    }}
+      };
+    }
 
     if (reqBody?.startDate && reqBody?.endDate) {
       const start = new Date(reqBody?.startDate);
@@ -240,7 +246,7 @@ const getAllActivities = async (reqBody) => {
           select: {
             id: true,
             full_name: true,
-            profile_img:true
+            profile_img: true,
           },
         },
         deal_of_activity: {
@@ -281,15 +287,18 @@ const getAllActivities = async (reqBody) => {
     // return activitiesWithRenamedType;
     const totalCount = await prisma.crms_d_activities.count();
     return {
-        data: activitiesWithRenamedType,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: activitiesWithRenamedType,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
     console.log("Get activity", error);
-    throw new CustomError("Error retrieving activity statuses", 503);
+    throw new CustomError(
+      error.message || "Error retrieving activity statuses",
+      error.status || 503
+    );
   }
 };
 // Get all Activities statuses
@@ -350,7 +359,7 @@ const getGroupActivities = async (reqBody) => {
           select: {
             id: true,
             full_name: true,
-            profile_img:true
+            profile_img: true,
           },
         },
       },
@@ -393,7 +402,10 @@ const getGroupActivities = async (reqBody) => {
     return groupedActivities;
   } catch (error) {
     console.log("Get activity", error);
-    throw new CustomError("Error retrieving activity statuses", 503);
+    throw new CustomError(
+      error.message || "Error retrieving activity statuses",
+      error.status || 503
+    );
   }
 };
 
@@ -404,7 +416,10 @@ const deleteActivities = async (id) => {
     });
   } catch (error) {
     console.error("Prisma Error:", error);
-    throw new CustomError(`Error deleting Activities: ${error.message}`, 500);
+    throw new CustomError(
+      error.message || `Error deleting Activities: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
