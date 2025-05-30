@@ -944,14 +944,15 @@ model crms_d_role_permissions {
 }
 
 model crms_m_product_category {
-  id         Int       @id(map: "PK__crms_m_p__3213E83F16DBC85B") @default(autoincrement())
-  name       String    @db.NVarChar(100)
-  is_active  String    @default("Y", map: "DF__crms_m_pr__is_ac__2FBA0BF1") @db.Char(1)
-  createdate DateTime  @default(now(), map: "DF__crms_m_pr__creat__30AE302A") @db.DateTime
-  updatedate DateTime? @db.DateTime
-  createdby  Int       @default(1, map: "DF__crms_m_pr__creat__31A25463")
-  updatedby  Int?
-  log_inst   Int?
+  id           Int               @id(map: "PK__crms_m_p__3213E83F16DBC85B") @default(autoincrement())
+  name         String            @db.NVarChar(100)
+  is_active    String            @default("Y", map: "DF__crms_m_pr__is_ac__2FBA0BF1") @db.Char(1)
+  createdate   DateTime          @default(now(), map: "DF__crms_m_pr__creat__30AE302A") @db.DateTime
+  updatedate   DateTime?         @db.DateTime
+  createdby    Int               @default(1, map: "DF__crms_m_pr__creat__31A25463")
+  updatedby    Int?
+  log_inst     Int?
+  product_cats crms_m_products[]
 }
 
 model crms_m_products {
@@ -975,7 +976,7 @@ model crms_m_products {
   updatedby                     Int?
   log_inst                      Int?
   product_image                 String?                         @db.NVarChar(255)
-  category                      String?                         @db.NChar(10)
+  category                      Int?
   case_product                  crms_d_cases[]
   invoice_item_product          crms_d_invoice_items[]
   order_item_product            crms_d_order_items[]
@@ -983,6 +984,7 @@ model crms_m_products {
   purchase_order_item_product   crms_d_purchase_order_items[]
   quotation_item_product        crms_d_quotation_items[]
   solution_product              crms_d_solution[]
+  product_cats                  crms_m_product_category?        @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction)
   Currency                      Currency?                       @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
   manufacturer                  crms_m_manufacturer?            @relation(fields: [manufacturer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   vendor                        crms_m_vendor?                  @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
