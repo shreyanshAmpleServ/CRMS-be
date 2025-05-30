@@ -290,6 +290,7 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
       totalCount : totalCount  ,
     };
   } catch (error) {
+    console.log("Error in product : ", error)
     throw new CustomError("Error retrieving products", 503);
   }
 };
