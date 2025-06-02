@@ -29,7 +29,10 @@ const login = async (req, res, next) => {
       .success("Login successful", { ...data.user, Token: data.token });
   } catch (error) {
     console.log("Auth Error", error);
-    next(error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Login failed",
+    });
   }
 };
 const logout = (req, res, next) => {
