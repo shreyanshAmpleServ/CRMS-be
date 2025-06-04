@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
+const CustomError = require("../../utils/CustomError");
 
 // Serialize/parse logic for any complex fields (if needed in the future)
 const serializeData = (data) => {
@@ -24,10 +23,13 @@ const createCompany = async (data) => {
       },
     });
     if (existingCompany) {
-      throw new CustomError("Email or Primary contact Email is not unique", 400);
+      throw new CustomError(
+        "Email or Primary contact Email is not unique",
+        400
+      );
     }
 
-    const company = await prisma.Company.create({ data});
+    const company = await prisma.Company.create({ data });
     return parseData(company);
   } catch (error) {
     throw new CustomError(`Error creating company: ${error.message}`, 500);
@@ -41,7 +43,7 @@ const findCompanyById = async (id) => {
     });
     return parseData(company);
   } catch (error) {
-    throw new CustomError('Error finding company by ID', 503);
+    throw new CustomError("Error finding company by ID", 503);
   }
 };
 
@@ -52,7 +54,7 @@ const findCompanyByEmail = async (email) => {
     });
     return parseData(company);
   } catch (error) {
-    throw new CustomError('Error finding company by email', 503);
+    throw new CustomError("Error finding company by email", 503);
   }
 };
 
@@ -83,9 +85,10 @@ const deleteCompany = async (id) => {
   }
 };
 
-const getAllCompanies = async (page , size , search ,startDate,endDate ) => {
+const getAllCompanies = async (page, size, search, startDate, endDate) => {
   try {
-    page = (page || (page == 0)) ?  1 : page ;
+    console.log("params : ", page, size, search, startDate, endDate);
+    page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -110,7 +113,7 @@ const getAllCompanies = async (page , size , search ,startDate,endDate ) => {
         },
         {
           businessType: { contains: search.toLowerCase() },
-        }
+        },
       ];
     }
     if (startDate && endDate) {
@@ -125,27 +128,28 @@ const getAllCompanies = async (page , size , search ,startDate,endDate ) => {
       }
     }
     const companies = await prisma.Company.findMany({
-      where: filters,
+      // where: filters,
       skip: skip,
-      take: size,
+      // take: size,
       orderBy: [
-        { updatedDate: 'desc' }, // Sort by updatedDate in descending order
-        { createdDate: 'desc' }, // Then sort by createdDate in descending order
+        { updatedDate: "desc" }, // Sort by updatedDate in descending order
+        { createdDate: "desc" }, // Then sort by createdDate in descending order
       ],
     });
-    const totalCount = await prisma.Company.count();
+    const totalCount = await prisma.Company.count({ where: filters });
+    console.log("Response : ", companies);
 
     return {
-        data: companies,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: companies,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
     // return companies.map(parseData);
   } catch (error) {
-    console.log("Error get Companies modal : ", error)
-    throw new CustomError('Error retrieving companies', 503);
+    console.log("Error get Companies modal : ", error);
+    throw new CustomError("Error retrieving companies", 503);
   }
 };
 

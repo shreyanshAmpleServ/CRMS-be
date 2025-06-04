@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Serialize `tags` before saving it
 const serializeTags = (data) => {

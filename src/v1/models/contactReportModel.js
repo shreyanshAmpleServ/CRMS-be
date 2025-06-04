@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -81,7 +81,6 @@ const getContactReport = async (filterDays) => {
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-   
     const contact1 = await prisma.crms_m_contact.findMany({
       where: {
         ...(yearFilter && {
@@ -92,17 +91,17 @@ const getContactReport = async (filterDays) => {
         }),
       },
     });
-   const monthlyCreatedContact = {};
+    const monthlyCreatedContact = {};
 
-contact1.forEach((data) => {
-  const createdMonth = new Date(data.createdate).getMonth() + 1; // 1-12
+    contact1.forEach((data) => {
+      const createdMonth = new Date(data.createdate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedContact[createdMonth]) {
-    monthlyCreatedContact[createdMonth] = 0;
-  }
+      if (!monthlyCreatedContact[createdMonth]) {
+        monthlyCreatedContact[createdMonth] = 0;
+      }
 
-  monthlyCreatedContact[createdMonth] += 1;
-});    
+      monthlyCreatedContact[createdMonth] += 1;
+    });
     const contact2 = await prisma.crms_m_contact.findMany({
       where: {
         createdate: {
@@ -113,7 +112,7 @@ contact1.forEach((data) => {
 
       // ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})},
       include: {
-           source_details: {
+        source_details: {
           select: {
             id: true,
             name: true,
@@ -121,26 +120,26 @@ contact1.forEach((data) => {
         },
       },
     });
-   const sourceMap = new Map();
+    const sourceMap = new Map();
 
-contact2.forEach((deal) => {
-  const sourceName = deal.source_details?.name || "Unknown";
+    contact2.forEach((deal) => {
+      const sourceName = deal.source_details?.name || "Unknown";
 
-  if (sourceMap.has(sourceName)) {
-    sourceMap.get(sourceName).count += 1;
-  } else {
-    sourceMap.set(sourceName, { source: sourceName, count: 1 });
-  }
-});
+      if (sourceMap.has(sourceName)) {
+        sourceMap.get(sourceName).count += 1;
+      } else {
+        sourceMap.set(sourceName, { source: sourceName, count: 1 });
+      }
+    });
 
-// Convert Map to Array
-const stageSummary = Array.from(sourceMap.values());
+    // Convert Map to Array
+    const stageSummary = Array.from(sourceMap.values());
 
     return {
       contacts: contacts,
       SourceByContact: stageSummary,
       monthlyContact: monthlyCreatedContact,
-    }; 
+    };
   } catch (error) {
     console.log("Contact getting error : ", error);
     throw new CustomError("Error retrieving lead", 503);

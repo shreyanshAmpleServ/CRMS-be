@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Create a new state
 const createState = async (data) => {
@@ -89,21 +89,21 @@ const deleteState = async (id) => {
 };
 
 // Get all states
-const getAllStates = async (search,page,size,country_id) => {
+const getAllStates = async (search, page, size, country_id) => {
   try {
-    page = (!page || (page == 0)) ?  1 : page ;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
     if (search) {
-      filters.name = { contains: search.toLowerCase() }
+      filters.name = { contains: search.toLowerCase() };
     }
     if (country_id) {
-      filters.country_code = { equal: country_id}
+      filters.country_code = { equal: country_id };
     }
     const states = await prisma.crms_m_states.findMany({
-      where:filters,
+      where: filters,
       skip: skip,
       take: size,
       include: {
@@ -123,15 +123,15 @@ const getAllStates = async (search,page,size,country_id) => {
     });
     const totalCount = await prisma.crms_m_states.count({
       where: filters,
-  });
+    });
 
     return {
-        data: states,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: states,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
     console.log(error);
     throw new CustomError("Error retrieving states", 503);

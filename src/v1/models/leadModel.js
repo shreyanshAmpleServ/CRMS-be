@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Helper function to define fields returned for a lead
 
@@ -106,7 +106,7 @@ const createLead = async (data) => {
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
       },
-      include:{
+      include: {
         crms_m_user: {
           select: {
             id: true,
@@ -178,7 +178,7 @@ const updateLead = async (id, data) => {
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
       },
-      include:{
+      include: {
         crms_m_user: {
           select: {
             id: true,
@@ -267,9 +267,9 @@ const deleteLead = async (id) => {
 };
 
 // Get all leads and include their references
-const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => {
+const getAllLeads = async (page, size, search, startDate, endDate, status) => {
   try {
-    page = (page || (page == 0)) ?  1 : page ;
+    page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -279,13 +279,13 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
       filters.OR = [
         {
           lead_company: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           crms_m_user: {
-                full_name: { contains: search.toLowerCase() },
-            },
+            full_name: { contains: search.toLowerCase() },
+          },
         },
         {
           first_name: { contains: search.toLowerCase() },
@@ -295,10 +295,12 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
         },
         {
           title: { contains: search.toLowerCase() },
-        }
+        },
       ];
     }
-    if(status){filters.lead_status = {equals :Number(status)} }
+    if (status) {
+      filters.lead_status = { equals: Number(status) };
+    }
     // if(priority){filters.priority = {equals :priority} }
 
     if (startDate && endDate) {
@@ -316,7 +318,7 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
       where: filters,
       skip: skip,
       take: size,
-      include:{
+      include: {
         crms_m_user: {
           select: {
             id: true,
@@ -364,14 +366,14 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
     const totalCount = await prisma.crms_leads.count();
 
     return {
-        data: leads,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: leads,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-    console.log("Error in modal of Leads :",error);
+    console.log("Error in modal of Leads :", error);
     throw new CustomError("Error retrieving leads", 503);
   }
 };

@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -103,7 +103,6 @@ const getLeadReport = async (filterDays) => {
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-   
     const deal1 = await prisma.crms_leads.findMany({
       where: {
         ...(yearFilter && {
@@ -114,17 +113,17 @@ const getLeadReport = async (filterDays) => {
         }),
       },
     });
-   const monthlyCreatedLeads = {};
+    const monthlyCreatedLeads = {};
 
-deal1.forEach((deal) => {
-  const createdMonth = new Date(deal.createdate).getMonth() + 1; // 1-12
+    deal1.forEach((deal) => {
+      const createdMonth = new Date(deal.createdate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedLeads[createdMonth]) {
-    monthlyCreatedLeads[createdMonth] = 0;
-  }
+      if (!monthlyCreatedLeads[createdMonth]) {
+        monthlyCreatedLeads[createdMonth] = 0;
+      }
 
-  monthlyCreatedLeads[createdMonth] += 1;
-});    
+      monthlyCreatedLeads[createdMonth] += 1;
+    });
     const deal2 = await prisma.crms_leads.findMany({
       where: {
         createdate: {
@@ -135,7 +134,7 @@ deal1.forEach((deal) => {
 
       // ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})},
       include: {
-           crms_m_sources: {
+        crms_m_sources: {
           select: {
             id: true,
             name: true,
@@ -143,20 +142,20 @@ deal1.forEach((deal) => {
         },
       },
     });
-   const sourceMap = new Map();
+    const sourceMap = new Map();
 
-deal2.forEach((deal) => {
-  const sourceName = deal.crms_m_sources?.name || "Unknown";
+    deal2.forEach((deal) => {
+      const sourceName = deal.crms_m_sources?.name || "Unknown";
 
-  if (sourceMap.has(sourceName)) {
-    sourceMap.get(sourceName).count += 1;
-  } else {
-    sourceMap.set(sourceName, { source: sourceName, count: 1 });
-  }
-});
+      if (sourceMap.has(sourceName)) {
+        sourceMap.get(sourceName).count += 1;
+      } else {
+        sourceMap.set(sourceName, { source: sourceName, count: 1 });
+      }
+    });
 
-// Convert Map to Array
-const stageSummary = Array.from(sourceMap.values());
+    // Convert Map to Array
+    const stageSummary = Array.from(sourceMap.values());
 
     return {
       lead: lead,

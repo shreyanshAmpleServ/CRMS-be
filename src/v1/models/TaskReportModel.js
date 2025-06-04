@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { name } = require("../../utils/emailQueue");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -57,13 +57,13 @@ const getTaskReport = async (filterDays) => {
           gte: startMoment.toDate(), // Get deals from the selected range
           lte: endMoment.toDate(), // Get deals from the last `filterDays`
         },
-        crms_m_activitytypes:{
+        crms_m_activitytypes: {
           is: {
-        name: "Task",
+            name: "Task",
+          },
+        },
       },
-        }
-      },
-        include: {
+      include: {
         crms_m_activitytypes: {
           select: {
             id: true,
@@ -74,7 +74,7 @@ const getTaskReport = async (filterDays) => {
           select: {
             id: true,
             full_name: true,
-            profile_img:true
+            profile_img: true,
           },
         },
       },
@@ -82,7 +82,6 @@ const getTaskReport = async (filterDays) => {
       orderBy: [{ updateddate: "desc" }, { createddate: "desc" }],
     });
 
-   
     const deal1 = await prisma.crms_d_activities.findMany({
       where: {
         ...(yearFilter && {
@@ -90,39 +89,39 @@ const getTaskReport = async (filterDays) => {
             gte: new Date(`${yearFilter}-01-01T00:00:00.000Z`),
             lt: new Date(`${Number(yearFilter) + 1}-01-01T00:00:00.000Z`),
           },
-             crms_m_activitytypes:{
-          is: {
-        name: "Task",
-      },
-        }
+          crms_m_activitytypes: {
+            is: {
+              name: "Task",
+            },
+          },
         }),
       },
     });
-   const monthlyCreatedLeads = {};
+    const monthlyCreatedLeads = {};
 
-deal1.forEach((deal) => {
-  const createdMonth = new Date(deal.createddate).getMonth() + 1; // 1-12
+    deal1.forEach((deal) => {
+      const createdMonth = new Date(deal.createddate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedLeads[createdMonth]) {
-    monthlyCreatedLeads[createdMonth] = 0;
-  }
+      if (!monthlyCreatedLeads[createdMonth]) {
+        monthlyCreatedLeads[createdMonth] = 0;
+      }
 
-  monthlyCreatedLeads[createdMonth] += 1;
-});    
+      monthlyCreatedLeads[createdMonth] += 1;
+    });
     const deal2 = await prisma.crms_d_activities.findMany({
       where: {
         createddate: {
           gte: startMoment2.toDate(),
           lte: endMoment2.toDate(),
         },
-        crms_m_activitytypes:{
+        crms_m_activitytypes: {
           is: {
-        name: "Task",
-      },
-        }
+            name: "Task",
+          },
+        },
       },
       include: {
-           crms_m_activitytypes: {
+        crms_m_activitytypes: {
           select: {
             id: true,
             name: true,
@@ -130,20 +129,20 @@ deal1.forEach((deal) => {
         },
       },
     });
-   const sourceMap = new Map();
+    const sourceMap = new Map();
 
-deal2.forEach((deal) => {
-  const sourceName = deal.status || "Unknown";
+    deal2.forEach((deal) => {
+      const sourceName = deal.status || "Unknown";
 
-  if (sourceMap.has(sourceName)) {
-    sourceMap.get(sourceName).count += 1;
-  } else {
-    sourceMap.set(sourceName, { source: sourceName, count: 1 });
-  }
-});
+      if (sourceMap.has(sourceName)) {
+        sourceMap.get(sourceName).count += 1;
+      } else {
+        sourceMap.set(sourceName, { source: sourceName, count: 1 });
+      }
+    });
 
-// Convert Map to Array
-const stageSummary = Array.from(sourceMap.values());
+    // Convert Map to Array
+    const stageSummary = Array.from(sourceMap.values());
 
     return {
       Tasks: Tasks,

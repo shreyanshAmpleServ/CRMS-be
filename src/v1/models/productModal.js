@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Create a new Product
 const createProduct = async (data) => {
@@ -9,12 +9,12 @@ const createProduct = async (data) => {
     const user = await prisma.crms_m_products.create({
       data: {
         ...data,
-        tax_id : Number(data?.tax_id) || null,
-        category:Number(data?.category) || null,
-        vendor_id : Number(data?.vendor_id) || null,
-        manufacturer_id : Number(data?.manufacturer_id) || null,
-        ordered:Number(data?.ordered) || null,
-        currency : Number(data?.currency) || null,
+        tax_id: Number(data?.tax_id) || null,
+        category: Number(data?.category) || null,
+        vendor_id: Number(data?.vendor_id) || null,
+        manufacturer_id: Number(data?.manufacturer_id) || null,
+        ordered: Number(data?.ordered) || null,
+        currency: Number(data?.currency) || null,
         is_active: data.is_active || "Y",
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -22,79 +22,80 @@ const createProduct = async (data) => {
         updatedby: data.createdby || 1,
         createdby: data.createdby || 1,
       },
-      include:{
-        vendor:{
-          select:{
-            name:true,
-            id:true
-          }
+      include: {
+        vendor: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        product_cats:{
-          select:{
-            id:true,
-            name:true,
-          }
+        product_cats: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-        manufacturer:{
-          select:{
-            name:true,
-            id:true
-          }
+        manufacturer: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        Currency:{
-          select:{
-            name:true,
-            id:true,
-            code:true
-          }
+        Currency: {
+          select: {
+            name: true,
+            id: true,
+            code: true,
+          },
         },
       },
     });
     return user;
   } catch (error) {
-    console.log("Error to create product : ", error)
+    console.log("Error to create product : ", error);
     throw new CustomError(`Error creating Product: ${error.message}`, 500);
   }
 };
 
 // Update a Product
 const updateProduct = async (id, data) => {
-  try {const updatedProduct = await prisma.crms_m_products.update({
+  try {
+    const updatedProduct = await prisma.crms_m_products.update({
       where: { id: parseInt(id) },
       data: {
         ...data,
-        category:Number(data?.category) || null,
-        tax_id : Number(data?.tax_id) || null,
-        vendor_id : Number(data?.vendor_id),
-        manufacturer_id : Number(data?.manufacturer_id),
-        currency : Number(data?.currency) || null,
-        updatedate:new Date()
+        category: Number(data?.category) || null,
+        tax_id: Number(data?.tax_id) || null,
+        vendor_id: Number(data?.vendor_id),
+        manufacturer_id: Number(data?.manufacturer_id),
+        currency: Number(data?.currency) || null,
+        updatedate: new Date(),
       },
-      include:{
-        vendor:{
-          select:{
-            name:true,
-            id:true
-          }
+      include: {
+        vendor: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        product_cats:{
-          select:{
-            id:true,
-            name:true,
-          }
+        product_cats: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-        manufacturer:{
-          select:{
-            name:true,
-            id:true
-          }
+        manufacturer: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        Currency:{
-          select:{
-            name:true,
-            id:true,
-            code:true
-          }
+        Currency: {
+          select: {
+            name: true,
+            id: true,
+            code: true,
+          },
         },
       },
     });
@@ -110,39 +111,38 @@ const updateProduct = async (id, data) => {
 const findProductById = async (id) => {
   try {
     const users = await prisma.crms_m_products.findUnique({
-      where:{ id: parseInt(id)},
-      include:{
-        vendor:{
-          select:{
-            name:true,
-            id:true
-          }
+      where: { id: parseInt(id) },
+      include: {
+        vendor: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        product_cats:{
-          select:{
-            id:true,
-            name:true,
-          }
+        product_cats: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-        manufacturer:{
-          select:{
-            name:true,
-            id:true
-          }
+        manufacturer: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        Currency:{
-          select:{
-            name:true,
-            code:true,
-            id:true
-          }
+        Currency: {
+          select: {
+            name: true,
+            code: true,
+            id: true,
+          },
         },
       },
-     
     });
     return users;
   } catch (error) {
-    console.log("Error in Details of Product ", error)
+    console.log("Error in Details of Product ", error);
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
@@ -150,14 +150,16 @@ const findProductById = async (id) => {
 // Delete a Product
 const deleteProduct = async (id) => {
   try {
-const hasReferences = await prisma.crms_d_order_items.findFirst({
-  where: { item_id: parseInt(id) }
-});
+    const hasReferences = await prisma.crms_d_order_items.findFirst({
+      where: { item_id: parseInt(id) },
+    });
 
-if (hasReferences) {
-  console.log("Product is referenced in order items.");
-  throw new Error('Cannot delete product: It is referenced in order items.');
-}
+    if (hasReferences) {
+      console.log("Product is referenced in order items.");
+      throw new Error(
+        "Cannot delete product: It is referenced in order items."
+      );
+    }
     await prisma.crms_m_products.delete({
       where: { id: parseInt(id) },
     });
@@ -200,9 +202,9 @@ if (hasReferences) {
 //     throw new CustomError("Error retrieving users", 503);
 //   }
 // };
-const getAllProduct = async (search ,page , size ,startDate, endDate) => {
+const getAllProduct = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
 
@@ -212,18 +214,18 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
       filters.OR = [
         {
           vendor: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           manufacturer: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           product_cats: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           code: { contains: search.toLowerCase() },
@@ -257,11 +259,11 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
             id: true,
           },
         },
-        product_cats:{
+        product_cats: {
           select: {
-            id:true,
-            name:true,
-          }
+            id: true,
+            name: true,
+          },
         },
         manufacturer: {
           select: {
@@ -287,14 +289,13 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error in product : ", error)
+    console.log("Error in product : ", error);
     throw new CustomError("Error retrieving products", 503);
   }
 };
-
 
 module.exports = {
   createProduct,

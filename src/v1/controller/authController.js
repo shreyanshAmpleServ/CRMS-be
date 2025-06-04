@@ -1,4 +1,5 @@
 const { registerUser, loginUser } = require("../services/authService");
+const axios = require("axios");
 
 const register = async (req, res, next) => {
   try {
@@ -35,8 +36,17 @@ const login = async (req, res, next) => {
     });
   }
 };
-const logout = (req, res, next) => {
+const logout = async (req, res, next) => {
   try {
+    const Blapiurl = req.headers["blapiurl"];
+    const authToken = req.headers["authorization"];
+    const response = await axios.get(`${Blapiurl}/api/Auth/Logout`, {
+      headers: {
+        Authorization: authToken,
+        Accept: "application/json",
+      },
+    });
+    console.log("logout : ", response);
     // Clear the authToken cookie by setting its maxAge to 0
     // res.clearCookie('authToken', {
     //   httpOnly: true,

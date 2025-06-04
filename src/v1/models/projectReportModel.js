@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -60,7 +60,6 @@ const getProjectReport = async (filterDays) => {
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
 
-   
     const Project2 = await prisma.Project.findMany({
       where: {
         ...(yearFilter && {
@@ -71,21 +70,21 @@ const getProjectReport = async (filterDays) => {
         }),
       },
     });
-   const monthlyCreatedProject = {};
+    const monthlyCreatedProject = {};
 
-Project2.forEach((data) => {
-  const createdMonth = new Date(data.createdDate).getMonth() + 1; // 1-12
+    Project2.forEach((data) => {
+      const createdMonth = new Date(data.createdDate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedProject[createdMonth]) {
-    monthlyCreatedProject[createdMonth] = 0;
-  }
+      if (!monthlyCreatedProject[createdMonth]) {
+        monthlyCreatedProject[createdMonth] = 0;
+      }
 
-  monthlyCreatedProject[createdMonth] += 1;
-});    
+      monthlyCreatedProject[createdMonth] += 1;
+    });
     return {
       projects: projects,
       monthlyProject: monthlyCreatedProject,
-    }; 
+    };
   } catch (error) {
     console.log("Project getting error : ", error);
     throw new CustomError("Error retrieving project", 503);

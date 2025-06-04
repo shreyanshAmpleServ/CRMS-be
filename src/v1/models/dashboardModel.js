@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -56,17 +56,18 @@ const getDashboardData = async (filterDays) => {
         deals: true,
         pipeline: true,
       },
-     
+
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const deals = await prisma.Deal.findMany({
       where: {
-        ...(startMoment && endMoment && {
-          createdDate: {
-            gte: startMoment.toDate(),
-            lte: endMoment.toDate(),
-          },
-        }),
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
         ...(filterDays?.dealsPipelineFilter && {
           pipelineId: Number(filterDays?.dealsPipelineFilter),
         }),
@@ -78,16 +79,17 @@ const getDashboardData = async (filterDays) => {
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const dealsss = await prisma.Deal.findMany({
-      where:{...(startMoment && endMoment && {
-        createdDate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      ...(filterDays?.wonDealFilter && {
-        pipelineId: Number(filterDays?.wonDealFilter),
-      }),
-      
+      where: {
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.wonDealFilter && {
+          pipelineId: Number(filterDays?.wonDealFilter),
+        }),
       },
       include: {
         deals: true,
@@ -96,13 +98,18 @@ const getDashboardData = async (filterDays) => {
     });
     const wonDeals = dealsss.filter((deal) => deal.status === "Won");
     const dealssss = await prisma.Deal.findMany({
-      where:{...(startMoment && endMoment && {
-        createdDate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})},
+      where: {
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.lostDealFilter && {
+          pipelineId: Number(filterDays?.lostDealFilter),
+        }),
+      },
       include: {
         deals: true,
         pipeline: true,
@@ -112,7 +119,9 @@ const getDashboardData = async (filterDays) => {
 
     // Process deals to count them by month
     const dealss = await prisma.Deal.findMany({
-      where:(filterDays?.monthlyDealFilter && {pipelineId :Number(filterDays?.monthlyDealFilter)}),
+      where: filterDays?.monthlyDealFilter && {
+        pipelineId: Number(filterDays?.monthlyDealFilter),
+      },
     });
     const monthlyDeals = {};
     dealss.forEach((deal) => {
@@ -126,7 +135,7 @@ const getDashboardData = async (filterDays) => {
     });
 
     return {
-      deal:deal,
+      deal: deal,
       deals: formattedDeals,
       monthlyDeals: monthlyDeals,
       wonDeals: wonDeals,

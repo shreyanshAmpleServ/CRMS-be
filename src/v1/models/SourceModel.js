@@ -1,16 +1,16 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
-const prisma = new PrismaClient();
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
+const prisma = require("../../utils/prismaClient");
 
 // Create a new source
 const createSource = async (data) => {
   try {
-      const source = await prisma.Sources.create({
+    const source = await prisma.Sources.create({
       data: {
         name: data.name,
         description: data.description || null,
-        is_active: data.is_active || 'Y',
-        createdby: data.createdby||1,
+        is_active: data.is_active || "Y",
+        createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
       },
     });
@@ -27,7 +27,7 @@ const findSourceById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!source) {
-      throw new CustomError('Source not found', 404);
+      throw new CustomError("Source not found", 404);
     }
     return source;
   } catch (error) {
@@ -66,14 +66,11 @@ const deleteSource = async (id) => {
 const getAllSources = async () => {
   try {
     const sources = await prisma.Sources.findMany({
-      orderBy: [
-        { updatedate: 'desc' },
-        { createdate: 'desc' },
-      ],
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     return sources;
   } catch (error) {
-    throw new CustomError('Error retrieving sources', 503);
+    throw new CustomError("Error retrieving sources", 503);
   }
 };
 

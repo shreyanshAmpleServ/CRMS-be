@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Serialize `socialProfiles` before saving it
 const serializeSocialProfiles = (data) => {
@@ -132,7 +132,7 @@ const updateContact = async (id, data) => {
     const serializedData = serializeSocialProfiles(updatedData);
     const contact = await prisma.crms_m_contact.update({
       where: { id: parseInt(id) },
-      data:  {
+      data: {
         ...serializedData,
         state: Number(serializedData.state) || null,
         country: Number(serializedData.country) || null,
@@ -176,9 +176,9 @@ const deleteContact = async (id) => {
   }
 };
 
-const getAllContacts = async (search ,page , size ,startDate, endDate) => {
+const getAllContacts = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
     const filters = {};
@@ -245,7 +245,7 @@ const getAllContacts = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
     console.log("Error", error);

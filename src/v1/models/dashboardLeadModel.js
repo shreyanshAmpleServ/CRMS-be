@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -63,40 +63,45 @@ const getLeadDashboardData = async (filterDays) => {
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     const leadForWin = await prisma.crms_leads.findMany({
-      where:{
-        ...(startMoment && endMoment && {
-        createdate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      // ...(filterDays?.wonDealFilter && {
-      //   pipelineId: Number(filterDays?.wonDealFilter),
-      // }),
-      
+      where: {
+        ...(startMoment &&
+          endMoment && {
+            createdate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        // ...(filterDays?.wonDealFilter && {
+        //   pipelineId: Number(filterDays?.wonDealFilter),
+        // }),
       },
       include: {
         crms_m_sources: true,
         crms_m_lost_reasons: true,
       },
     });
-    const wonLeads = leadForWin.filter((deal) => deal.crms_m_lost_reasons.name === "Won");
+    const wonLeads = leadForWin.filter(
+      (deal) => deal.crms_m_lost_reasons.name === "Won"
+    );
     const leadForLoss = await prisma.crms_leads.findMany({
-      where:{
-        ...(startMoment && endMoment && {
-        createdate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      // ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})
-    },
-    include: {
-      crms_m_sources: true,
-      crms_m_lost_reasons: true,
-    },
+      where: {
+        ...(startMoment &&
+          endMoment && {
+            createdate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        // ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})
+      },
+      include: {
+        crms_m_sources: true,
+        crms_m_lost_reasons: true,
+      },
     });
-    const lostLeads = leadForLoss.filter((deal) =>deal.crms_m_lost_reasons.name === "Lost");
+    const lostLeads = leadForLoss.filter(
+      (deal) => deal.crms_m_lost_reasons.name === "Lost"
+    );
 
     const deal1 = await prisma.crms_leads.findMany({
       where: {
@@ -107,33 +112,35 @@ const getLeadDashboardData = async (filterDays) => {
         //   },
         // }),
         ...(filterDays?.monthlyLeadFilter && {
-          lead_status :Number(filterDays?.monthlyLeadFilter)
-        })
+          lead_status: Number(filterDays?.monthlyLeadFilter),
+        }),
       },
     });
-   const monthlyCreatedLeads = {};
+    const monthlyCreatedLeads = {};
 
-deal1.forEach((deal) => {
-  const createdMonth = new Date(deal.createdate).getMonth() + 1; // 1-12
+    deal1.forEach((deal) => {
+      const createdMonth = new Date(deal.createdate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedLeads[createdMonth]) {
-    monthlyCreatedLeads[createdMonth] = 0;
-  }
+      if (!monthlyCreatedLeads[createdMonth]) {
+        monthlyCreatedLeads[createdMonth] = 0;
+      }
 
-  monthlyCreatedLeads[createdMonth] += 1;
-}); 
+      monthlyCreatedLeads[createdMonth] += 1;
+    });
     const deal2 = await prisma.crms_leads.findMany({
       where: {
-        ...(startMoment && endMoment && {
-          createdate: {
-            gte: startMoment.toDate(),
-            lte: endMoment.toDate(),
-          },})
+        ...(startMoment &&
+          endMoment && {
+            createdate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
       },
 
       // ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})},
       include: {
-           crms_m_sources: {
+        crms_m_sources: {
           select: {
             id: true,
             name: true,
@@ -141,19 +148,19 @@ deal1.forEach((deal) => {
         },
       },
     });
-   const sourceMap = new Map();
-   deal2.forEach((deal) => {
-    const sourceName = deal.crms_m_sources?.name || "Unknown";
-  
-    if (sourceMap.has(sourceName)) {
-      sourceMap.get(sourceName).count += 1;
-    } else {
-      sourceMap.set(sourceName, { source: sourceName, count: 1 });
-    }
-  });
-  
-  // Convert Map to Array
-  const stageSummary = Array.from(sourceMap.values());
+    const sourceMap = new Map();
+    deal2.forEach((deal) => {
+      const sourceName = deal.crms_m_sources?.name || "Unknown";
+
+      if (sourceMap.has(sourceName)) {
+        sourceMap.get(sourceName).count += 1;
+      } else {
+        sourceMap.set(sourceName, { source: sourceName, count: 1 });
+      }
+    });
+
+    // Convert Map to Array
+    const stageSummary = Array.from(sourceMap.values());
     const deal3 = await prisma.crms_leads.findMany({
       // where: {
       //   createdate: {
@@ -172,29 +179,27 @@ deal1.forEach((deal) => {
         },
       },
     });
-   const StatusMap = new Map();
-   deal3.forEach((deal) => {
-    const sourceName = deal.crms_m_lost_reasons?.name || "Unknown";
-  
-    if (StatusMap.has(sourceName)) {
-      StatusMap.get(sourceName).count += 1;
-    } else {
-      StatusMap.set(sourceName, { source: sourceName, count: 1 });
-    }
-  });
-  
-  // Convert Map to Array
-  const statusSummary = Array.from(StatusMap.values());
+    const StatusMap = new Map();
+    deal3.forEach((deal) => {
+      const sourceName = deal.crms_m_lost_reasons?.name || "Unknown";
 
+      if (StatusMap.has(sourceName)) {
+        StatusMap.get(sourceName).count += 1;
+      } else {
+        StatusMap.set(sourceName, { source: sourceName, count: 1 });
+      }
+    });
 
+    // Convert Map to Array
+    const statusSummary = Array.from(StatusMap.values());
 
     return {
-      leads:leads,
+      leads: leads,
       leadSources: stageSummary,
       monthlyLeads: monthlyCreatedLeads,
       wonLeads: wonLeads,
       LostLeads: lostLeads,
-      leadByStatus:statusSummary
+      leadByStatus: statusSummary,
     };
   } catch (error) {
     console.log("Lead Dashboard getting error : ", error);

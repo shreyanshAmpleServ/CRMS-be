@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const prisma = require("../../utils/prismaClient");
 
 // Parse `tags` after retrieving it
 const parseTags = (deal) => {
@@ -60,7 +60,6 @@ const getCompanyReport = async (filterDays) => {
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
 
-   
     const company2 = await prisma.Company.findMany({
       where: {
         ...(yearFilter && {
@@ -71,21 +70,21 @@ const getCompanyReport = async (filterDays) => {
         }),
       },
     });
-   const monthlyCreatedCompany = {};
+    const monthlyCreatedCompany = {};
 
-company2.forEach((data) => {
-  const createdMonth = new Date(data.createdDate).getMonth() + 1; // 1-12
+    company2.forEach((data) => {
+      const createdMonth = new Date(data.createdDate).getMonth() + 1; // 1-12
 
-  if (!monthlyCreatedCompany[createdMonth]) {
-    monthlyCreatedCompany[createdMonth] = 0;
-  }
+      if (!monthlyCreatedCompany[createdMonth]) {
+        monthlyCreatedCompany[createdMonth] = 0;
+      }
 
-  monthlyCreatedCompany[createdMonth] += 1;
-});    
+      monthlyCreatedCompany[createdMonth] += 1;
+    });
     return {
       companies: companies,
       monthlyCompany: monthlyCreatedCompany,
-    }; 
+    };
   } catch (error) {
     console.log("Contact getting error : ", error);
     throw new CustomError("Error retrieving lead", 503);
