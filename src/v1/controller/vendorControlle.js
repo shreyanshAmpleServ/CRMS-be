@@ -15,7 +15,7 @@ const createVendor = async (req, res, next) => {
   try {
     let imageUrl = null;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "vendor");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "vendor",req.body.name);
     } 
     let userData = { ...req.body,createdby:req.user.id, profile_img:imageUrl }; 
     // userData= sanitizeData(userData);
@@ -55,7 +55,7 @@ const updateVendor = async (req, res, next) => {
     // Update profile_img only if a new image is provided
 
     if (req.file) {
-      vendorData.profile_img = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "vendor") || null;
+      vendorData.profile_img = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "vendor",req.body.name) || null;
     } 
     const user = await vendorService.updateVendor(req.params.id, vendorData);
     res.status(200).success('User updated successfully', user);

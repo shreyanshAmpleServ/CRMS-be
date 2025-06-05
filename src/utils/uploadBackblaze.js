@@ -22,21 +22,24 @@ const b2 = new B2({
   applicationKeyId: process.env.BACKBLAZE_B2_KEY_ID,
   applicationKey: process.env.BACKBLAZE_B2_APPLICATION_KEY,
 });
+const sanitizeName = (str) => str.replace(/\s+/g, '_'); // Replace spaces with underscores
 
 // testDirectAuth();
-const uploadToBackblaze = async (fileBuffer, originalName, mimeType,folder="general") => {
+const uploadToBackblaze = async (fileBuffer, originalName, mimeType,folder="general",name) => {
   await b2.authorize();
+  // console.log("file name : ",originalName,mimeType)
   const bucketName = process.env.BACKBLAZE_B2_BUCKET_NAME;
   const { data: buckets } = await b2.listBuckets();
   const bucket = buckets.buckets.find(b => b.bucketName === bucketName);
   if (!bucket) throw new Error('Bucket not found');
   
+const uniqueId = Date.now();
   const ext = path.extname(originalName);
-  const fileName = `${folder}/${uuidv4()}${ext}`;
+  const fileName = `${folder.toLowerCase()}/${sanitizeName(name).toLowerCase()}/${uniqueId}_${originalName}`;
+  // const fileName = `${folder}/${name}/${uuidv4()}${ext}`;
   
   const { data: uploadData } = await b2.getUploadUrl({ bucketId: bucket.bucketId });
-  
-  console.log("Inner URL:",fileName, uploadData);
+ 
 
   await b2.uploadFile({
     uploadUrl: uploadData.uploadUrl,

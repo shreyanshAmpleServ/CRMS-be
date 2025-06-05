@@ -16,7 +16,7 @@ const createUser = async (req, res, next) => {
   try {
     let imageUrl = null;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "users");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "users",req.body.full_name);
     }
     let userData = { ...req.body, profile_img: imageUrl }; 
     userData= sanitizeData(userData);
@@ -64,7 +64,7 @@ const updateUser = async (req, res, next) => {
 
     // Update profile_img only if a new image is provided
         if (req.file) {
-          userData.profile_img = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "users") || null;
+          userData.profile_img = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "users",req.body.full_name) || null;
         }
 
     const user = await userService.updateUser(req.params.id, userData);

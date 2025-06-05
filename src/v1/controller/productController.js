@@ -8,7 +8,7 @@ const createProduct = async (req, res, next) => {
     try {
         let imageUrl = null;
         if (req.file) {
-          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "product");
+          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "product",req.body.code);
         }
         let userData = { ...req.body,createdby:req.user.id, product_image: imageUrl }; 
 
@@ -37,7 +37,7 @@ const updateProduct = async (req, res, next) => {
         // Update profile_img only if a new image is provided
         productData.product_image = req.body.product_image;
         if (req.file) {
-            productData.product_image = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "product") || null;
+            productData.product_image = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "product",req.body.code) || null;
         }
         const product = await productService.updateProduct(req.params.id,productData);
         res.status(200).success('product updated successfully', product);

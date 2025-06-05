@@ -50,7 +50,7 @@ const createCompany = async (req, res, next) => {
   try {
     let logoUrl = null;
     if (req.file) {
-      logoUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "company");
+      logoUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "company",req.body.name);
     }
     let companyData = { ...req.body, logo: logoUrl}; 
     companyData= sanitizeCompanyData(companyData)
@@ -89,7 +89,7 @@ const updateCompany = async (req, res, next) => {
     let companyData = { ...req.body };
     companyData.logo = req.body.logo; 
     if (req.file) {
-      companyData.logo = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype,"company");
+      companyData.logo = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype,"company",req.body.name);
     } 
     companyData= sanitizeCompanyData(companyData)
     const company = await companyService.updateCompany(req.params.id, companyData);

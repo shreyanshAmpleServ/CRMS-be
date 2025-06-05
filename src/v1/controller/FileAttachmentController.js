@@ -9,7 +9,7 @@ const createAttachment = async (req, res, next) => {
     try {
         let imageUrl =null;
         if (req.file) {
-          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , `documents/${req.body.related_entity_type}`);
+          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , `documents/${req.body.related_entity_type}`,req.body.related_entity_name);
         } 
         // const profielPath = req.file ? req.file.path : null; // Construct path
         let userData = { ...req.body,createdby:req.user.id, file: imageUrl }; 
@@ -36,7 +36,7 @@ const updateAttachment = async (req, res, next) => {
         const {id , ...data} = req.body
         let imageUrl =req.body.file;
         if (req.file) {
-          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , `documents/${req.body.related_entity_type}`);
+          imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , `documents/${req.body.related_entity_type}`,req.body.related_entity_name);
         } 
         // const profielPath = req.file ? req.file.path : null; // Construct path
         let userData = { ...data,updatedby:req.user.id, file: imageUrl }; 

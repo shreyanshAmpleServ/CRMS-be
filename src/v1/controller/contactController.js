@@ -9,7 +9,7 @@ const createContact = async (req, res, next) => {
   try {
     let imageUrl = null;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "contacts");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "contacts",req.body.firstName+req.body.lastName);
     }
     
     // Trim extra quotes if necessary
@@ -60,7 +60,7 @@ const updateContact = async (req, res, next) => {
     const existingData = await findContactById(req.params.id);
     let imageUrl = req.body.image;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "contacts");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "contacts",req.body.firstName+req.body.lastName);
     }
     let contactData = { ...req.body };
     delete contactData.id;

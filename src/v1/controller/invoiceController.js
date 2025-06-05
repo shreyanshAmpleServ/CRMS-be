@@ -9,8 +9,8 @@ const createInvoice = async (req, res, next) => {
     try {
         const { orderItemsData, ...orderData } = req.body;
         
-        const attachment1Path = req.files?.attachment1?.length ?   await uploadToBackblaze(req.files?.attachment1?.[0]?.buffer, req.files?.attachment1?.[0]?.originalname, req.files?.attachment1?.[0]?.mimetype , `salesInvoice`) : null;
-        const attachment2Path = req.files?.attachment2?.length ?   await uploadToBackblaze(req.files?.attachment2?.[0]?.buffer, req.files?.attachment2?.[0]?.originalname, req.files?.attachment2?.[0]?.mimetype , `salesInvoice`) : null; 
+        const attachment1Path = req.files?.attachment1?.length ?   await uploadToBackblaze(req.files?.attachment1?.[0]?.buffer, req.files?.attachment1?.[0]?.originalname, req.files?.attachment1?.[0]?.mimetype , `salesInvoice/attachmen1`,req.body.order_code) : null;
+        const attachment2Path = req.files?.attachment2?.length ?   await uploadToBackblaze(req.files?.attachment2?.[0]?.buffer, req.files?.attachment2?.[0]?.originalname, req.files?.attachment2?.[0]?.mimetype , `salesInvoice/attachmen2`,req.body.order_code) : null; 
 
         const parsedOrderItemsData = orderItemsData ? JSON.parse(orderItemsData) : [];
         const orderDAta =  { ...orderData, 
@@ -39,8 +39,8 @@ const updateInvoice = async (req, res, next) => {
         const { orderItemsData, id, ...orderData } = req.body;
         const existingData = await findInvoiceById(req.params.id);
         
-        const attachment1Path = req.files?.attachment1?.length ?   await uploadToBackblaze(req.files?.attachment1?.[0]?.buffer, req.files?.attachment1?.[0]?.originalname, req.files?.attachment1?.[0]?.mimetype , `salesInvoice`) :  req.body.attachment1;
-        const attachment2Path = req.files?.attachment2?.length ?   await uploadToBackblaze(req.files?.attachment2?.[0]?.buffer, req.files?.attachment2?.[0]?.originalname, req.files?.attachment2?.[0]?.mimetype , `salesInvoice`) :  req.body.attachment2; 
+        const attachment1Path = req.files?.attachment1?.length ?   await uploadToBackblaze(req.files?.attachment1?.[0]?.buffer, req.files?.attachment1?.[0]?.originalname, req.files?.attachment1?.[0]?.mimetype , `salesInvoice/attachmen1`,req.body.order_code) :  req.body.attachment1;
+        const attachment2Path = req.files?.attachment2?.length ?   await uploadToBackblaze(req.files?.attachment2?.[0]?.buffer, req.files?.attachment2?.[0]?.originalname, req.files?.attachment2?.[0]?.mimetype , `salesInvoice/attachmen2`,req.body.order_code) :  req.body.attachment2; 
 
         // let orderData = { ...req.body.orderData,updatedby:req.user.id}; 
         // let orderItemsData = JSON.parse(req.body.orderItemsData)

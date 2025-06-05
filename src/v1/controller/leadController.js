@@ -58,7 +58,7 @@ const createLead = async (req, res, next) => {
     // Handle company icon upload if provided
     let imageUrl = null;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "lead");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "lead",req.body.title);
     } 
 
     let leadData = { ...req.body };
@@ -87,7 +87,7 @@ const updateLead = async (req, res, next) => {
     const existingData = await findLeadById(req.params.id);
     let imageUrl = req.body.company_icon;
     if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "lead");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "lead",req.body.title);
     } 
     let leadData = { ...req.body };
 
