@@ -18,8 +18,8 @@ const redirectionLogin = async (data) => {
     const arrResponseDomain = responseGetSubDomain.data;
     // console.log("Error of domain 1 : ", arrResponseDomain);
     if (arrResponseDomain && Object.keys(arrResponseDomain).length > 0) {
-      const VL_api_url = "http://localhost:5000/api/v1/";
-      //   const VL_api_url = arrResponseDomain.cargo_app_api;
+      // const VL_api_url = "http://localhost:5000/api/v1/";
+        const VL_api_url = arrResponseDomain.crms_api;
       const VL_BLApiUrl = arrResponseDomain.BLApiUrl;
 
       // Step 2: POST to login on cargo_app_api
@@ -41,7 +41,7 @@ const redirectionLogin = async (data) => {
       });
 
       const arrResponse = loginResponse.data.data[0];
-      //   console.log("Array Response 2: ", arrResponse);
+        console.log("Array Response 2: ", arrResponse);
       // Step 3: GET permissions
       const permissionResponse = await axios.get(
         `${VL_BLApiUrl}/api/Menu/GetMenuList?module_code=LSNGSA2001`,
@@ -53,8 +53,8 @@ const redirectionLogin = async (data) => {
         }
       );
 
-      const arrResponsePermission = permissionResponse.data;
-      //   console.log("Get permission : ", arrResponsePermission);
+      // const arrResponsePermission = permissionResponse.data;
+        // console.log("Get permission : ", arrResponsePermission);
 
       // Step 4: Handle login success
       if (loginResponse.success) {
@@ -114,7 +114,7 @@ const loginByRedirection = async (data) => {
         Accept: "application/json",
       },
     });
-
+// console.log("Error jjjjjj3 : ", response)
     const responseData = response.data;
 
     // Step 2: If valid response, build final object

@@ -87,7 +87,6 @@ const deleteCompany = async (id) => {
 
 const getAllCompanies = async (page, size, search, startDate, endDate) => {
   try {
-    console.log("params : ", page, size, search, startDate, endDate);
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -137,7 +136,6 @@ const getAllCompanies = async (page, size, search, startDate, endDate) => {
       ],
     });
     const totalCount = await prisma.Company.count({ where: filters });
-    console.log("Response : ", companies);
 
     return {
       data: companies,

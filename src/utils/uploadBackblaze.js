@@ -36,7 +36,7 @@ const uploadToBackblaze = async (fileBuffer, originalName, mimeType,folder="gene
   
   const { data: uploadData } = await b2.getUploadUrl({ bucketId: bucket.bucketId });
   
-  console.log("Inner URL:",fileName, uploadData);
+  // console.log("Inner URL:",fileName, uploadData);
 
   await b2.uploadFile({
     uploadUrl: uploadData.uploadUrl,
@@ -84,7 +84,7 @@ const deleteFromBackblaze = async (fileUrl) => {
   
       return true;
     } catch (err) {
-      console.error('❌ Failed to delete from B2:', err.message);
+      console.error(' Failed to delete from B2:', err.message);
       throw err;
     }
   };

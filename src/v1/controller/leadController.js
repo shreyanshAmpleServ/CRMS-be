@@ -97,8 +97,6 @@ const updateLead = async (req, res, next) => {
     } else {
       leadData = sanitizeLeadData(req, leadData, imageUrl);
     }
-
-    console.log("Lead Data:", leadData);
     // Sanitize the lead data and handle company icon
     
     const lead = await leadService.updateLead(req.params.id, leadData);
