@@ -20,7 +20,8 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "http://crms.dcctz.com:81",
+      "https://mowara.dcclogsuite.com",
+      "https://crms.dcctz.com",
       "http://192.168.29.127:3000",
       "http://localhost:3000",
       "http://192.168.29.55:3000",

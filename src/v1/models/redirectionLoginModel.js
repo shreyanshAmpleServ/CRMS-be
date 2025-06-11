@@ -19,7 +19,7 @@ const redirectionLogin = async (data) => {
     // console.log("Error of domain 1 : ", arrResponseDomain);
     if (arrResponseDomain && Object.keys(arrResponseDomain).length > 0) {
       // const VL_api_url = "http://localhost:5000/api/v1/";
-        const VL_api_url = arrResponseDomain.crms_api;
+        const VL_api_url = arrResponseDomain.crms_app_api;
       const VL_BLApiUrl = arrResponseDomain.BLApiUrl;
 
       // Step 2: POST to login on cargo_app_api

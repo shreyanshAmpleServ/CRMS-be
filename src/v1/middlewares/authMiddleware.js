@@ -3,6 +3,7 @@ require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
 const axios = require("axios");
 const userModel = require("../models/userModel"); // Import your user model to fetch user details from DB or cache
+const createPrismaClient = require("../../utils/prismaCatalog");
 
 const authenticateToken = async (req, res, next) => {
   // const token = req.cookies?.authToken; // Get the token from the cookie
@@ -11,10 +12,9 @@ const authenticateToken = async (req, res, next) => {
   //   return res.error('Access denied. No token provided.', 403); // Using res.error for error response
   // }
   try {
-    const authHeaders = req.headers["blapiurl"];
     const authToken = req.headers["authorization"];
     const domain = req.headers["domain"];
-    if (domain == "mowara") {
+    // if (domain == "mowara") {
       try {
         // Step 1: Get API URL config for the domain
         const arrAPIConfig = await getAPIUrls(domain);
@@ -49,30 +49,32 @@ const authenticateToken = async (req, res, next) => {
         }
 
         req.user = response.data.data[0];
+        prismaInjector(req)
         next();
       } catch (error) {
         console.error("getAPIConfigWithToken error:", error.message);
         return 1;
       }
-    } else {
-      const authHeader = req.headers["authorization"];
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "No token provided" });
-      }
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, jwtSecret); // Decode the JWT token
-      const userId = decoded.userId; // Extract userId from the decoded token
+    // } 
+    // else {
+    //   const authHeader = req.headers["authorization"];
+    //   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    //     return res.status(401).json({ message: "No token provided" });
+    //   }
+    //   const token = authHeader.split(" ")[1];
+    //   const decoded = jwt.verify(token, jwtSecret); // Decode the JWT token
+    //   const userId = decoded.userId; // Extract userId from the decoded token
 
-      // Fetch the user from the database or cache using the userId
-      const user = await userModel.findUserById(userId); // This assumes a `findUserById` method in your user model
+    //   // Fetch the user from the database or cache using the userId
+    //   const user = await userModel.findUserById(userId); // This assumes a `findUserById` method in your user model
 
-      if (!user) {
-        return res.error("User not found", 403); // Using res.error for user not found
-      }
+    //   if (!user) {
+    //     return res.error("User not found", 403); // Using res.error for user not found
+    //   }
 
-      req.user = user; // Attach the full user object to the request object
-      next(); // Proceed to the next middleware or route handler}
-    }
+    //   req.user = user; // Attach the full user object to the request object
+    //   next(); // Proceed to the next middleware or route handler}
+    // }
   } catch (error) {
     return res.error(
       error.message || "Invalid or expired token",
@@ -97,5 +99,18 @@ const getAPIUrls = async (domain) => {
     return null;
   }
 };
+const prismaInjector= async(req) => {
+  const catalog = req.headers["dbname"];
+  if (!catalog) {
+    throw new Error("Missing catalog in headers");
+  }
+
+  req.prisma = createPrismaClient(catalog);
+
+  // Optional cleanup on response end
+  req.res?.on("finish", async () => {
+    await req.prisma.$disconnect();
+  });
+}
 
 module.exports = { authenticateToken };
