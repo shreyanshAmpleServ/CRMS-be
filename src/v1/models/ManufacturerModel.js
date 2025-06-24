@@ -63,7 +63,7 @@ const deleteManufacturer = async (id) => {
 };
 
 // Get all industries
-const getAllManufacturer = async (search,page,size) => {
+const getAllManufacturer = async (search,page,size,dataFilter) => {
     try {
         page = (!page || (page == 0)) ?  1 : page ;
         size = size || 10;
@@ -72,6 +72,9 @@ const getAllManufacturer = async (search,page,size) => {
         const filters = {};
         if (search) {
           filters.name = { contains: search.toLowerCase() }
+        }
+        if (dataFilter == "Active") {
+          filters.is_active = "Y"
         }
         const manufacturers = await prisma.crms_m_manufacturer.findMany({
             where: filters,
@@ -93,7 +96,8 @@ const getAllManufacturer = async (search,page,size) => {
             totalCount : totalCount  ,
           };
     } catch (error) {
-        throw new CustomError('Error retrieving manufacturers', 503);
+console.log("Error manufac",error)
+        throw new CustomError('Error retrieving manufacturers'+{error}, 503);
     }
 };
 

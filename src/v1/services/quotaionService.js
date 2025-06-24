@@ -3,6 +3,9 @@ const quotationModal = require('../models/quotationModal');
 const createQuotation = async (orderData,orderItemsData) => {
     return await quotationModal.createQuotation(orderData,orderItemsData);
 };
+const syncQuotation = async (orderData,user) => {
+    return await quotationModal.syncQuotation(orderData,user);
+};
 
 const findQuotationById = async (id) => {
     return await quotationModal.findQuotationById(id);
@@ -29,5 +32,6 @@ module.exports = {
   updateQuotaion,
   deleteQuotation,
   getAllQuotaion,
-  generateQuotaionCode
+  generateQuotaionCode,
+  syncQuotation,
 };

@@ -110,7 +110,7 @@ const deleteSolution = async (id) => {
 };
 
 // Get all solutions 
-const getAllSolution = async (search ,page , size,startDate, endDate) => {
+const getAllSolution = async (search ,page , size,startDate, endDate,dataFilter) => {
   try {
     page = page || 1 ;
     size = size || 10;
@@ -136,7 +136,9 @@ const getAllSolution = async (search ,page , size,startDate, endDate) => {
         },
       ];
     }
-
+if(dataFilter == "Active"){
+  filters.is_active = "Y"
+}
     // Handle date filtering
     if (startDate && endDate) {
       const start = new Date(startDate);

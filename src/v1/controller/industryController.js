@@ -40,7 +40,8 @@ const deleteIndustry = async (req, res, next) => {
 
 const getAllIndustries = async (req, res, next) => {
     try {
-        const industries = await industryService.getAllIndustries();
+    const {dataFilter} = req.query
+        const industries = await industryService.getAllIndustries(dataFilter);
         res.status(200).success(null, industries);
     } catch (error) {
         next(error);

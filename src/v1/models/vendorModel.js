@@ -171,7 +171,7 @@ const deleteVendor = async (id) => {
 };
 
 // Get all users and include their roles
-const getAllVendors = async (search,page,size ,startDate, endDate) => {
+const getAllVendors = async (search,page,size ,startDate, endDate,dataFilter) => {
   try {
     console.log("Page : ",page,search,size,startDate,endDate)
     page = page || 1 ;
@@ -184,21 +184,23 @@ const getAllVendors = async (search,page,size ,startDate, endDate) => {
       filters.OR = [
         {
           crms_m_user: {
-            full_name: { contains: search, mode: 'insensitive' },
+            full_name: { contains:  search.toLowerCase() },
           },
         },
         {
-          phone: { contains: search, mode: 'insensitive' },
+          phone: { contains:  search.toLowerCase() },
         },
         {
-          email: { contains: search, mode: 'insensitive' },
+          email: { contains:  search.toLowerCase() },
         },
         {
-          name: { contains: search, mode: 'insensitive' },
+          name: { contains:  search.toLowerCase() },
         },
       ];
     }
-
+    if(dataFilter == "Active"){
+      filters.is_active =  "Y"
+    }
     // Handle date filtering
     if (startDate && endDate) {
       const start = new Date(startDate);

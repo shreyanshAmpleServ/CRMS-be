@@ -16,8 +16,8 @@ const deleteSolution = async (id) => {
   return await solutionsModel.deleteSolution(id);
 };
 
-const getAllSolution = async (search ,page , size ,startDate,endDate) => {
-  return await solutionsModel.getAllSolution(search ,page , size, startDate, endDate);
+const getAllSolution = async (search ,page , size ,startDate,endDate,dataFilter) => {
+  return await solutionsModel.getAllSolution(search ,page , size, startDate, endDate,dataFilter);
 };
 
 

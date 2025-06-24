@@ -308,7 +308,7 @@ const generateOrderCode = async () => {
       orderBy: { id: 'desc' }
     });
      const nextId = latestOrder ? latestOrder.id + 1 : 1;
-    return `ORD-1${nextId}`;
+    return `ORD-001${nextId}`;
 } catch (error) {
     console.log("Error to generation order code : ", error)
     throw new CustomError('Error retrieving oder code', 503);

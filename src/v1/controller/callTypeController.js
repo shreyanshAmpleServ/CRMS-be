@@ -40,7 +40,8 @@ const deleteCallType = async (req, res, next) => {
 
 const getAllCallTypes = async (req, res, next) => {
     try {
-        const callStatuses = await callTypeService.getAllCallTypes();
+        const {dataFilter} = req.query
+        const callStatuses = await callTypeService.getAllCallTypes(dataFilter);
         res.status(200).success(null, callStatuses);
     } catch (error) {
         next(error);

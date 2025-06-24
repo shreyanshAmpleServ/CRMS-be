@@ -16,8 +16,8 @@ const deletePriceBook = async (id) => {
     return await priceBookModal.deletePriceBook(id);
 };
 
-const getAllPriceBook = async (search ,page , size,startDate,endDate) => {
-    return await priceBookModal.getAllPriceBook(search ,page , size,startDate,endDate);
+const getAllPriceBook = async (search ,page , size,startDate,endDate,dataFilter) => {
+    return await priceBookModal.getAllPriceBook(search ,page , size,startDate,endDate,dataFilter);
 };
 
 module.exports = {

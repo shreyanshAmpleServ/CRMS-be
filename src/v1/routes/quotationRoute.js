@@ -11,5 +11,6 @@ router.put('/quotation/:id', authenticateToken,upload.fields([{ name: 'attachmen
 router.delete('/quotation/:id', authenticateToken, quotaionController.deleteQuotation);
 router.get('/quotation', authenticateToken, quotaionController.getAllQuotaion);
 router.get('/get-quotation-code', authenticateToken, quotaionController.generateQuotaionCode);
+router.post('/sync-bulk-quotation', authenticateToken, quotaionController.syncQuotation);
 
 module.exports = router;

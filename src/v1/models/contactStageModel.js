@@ -63,9 +63,10 @@ const deleteContactStage = async (id) => {
 };
 
 // Get all contact stages
-const getAllContactStages = async () => {
+const getAllContactStages = async (dataFilter) => {
     try {
         const contactStages = await prisma.ContactStages.findMany({
+            where:dataFilter == "Active" ? {is_active : "Y" } : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

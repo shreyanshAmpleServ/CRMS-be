@@ -16,8 +16,8 @@ const deleteMeetingType = async (id) => {
     return await meetingTypeModel.deleteMeetingType(id);
 };
 
-const getAllMeetingTypes = async () => {
-    return await meetingTypeModel.getAllMeetingTypes();
+const getAllMeetingTypes = async (dataFilter) => {
+    return await meetingTypeModel.getAllMeetingTypes(dataFilter);
 };
 
 module.exports = {

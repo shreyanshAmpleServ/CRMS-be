@@ -16,8 +16,8 @@ const deleteSetup = async (id) => {
     return await taxSetUpModal.deleteSetup(id);
 };
 
-const getAllTaxSetup = async () => {
-    return await taxSetUpModal.getAllTaxSetup();
+const getAllTaxSetup = async (dataFilter) => {
+    return await taxSetUpModal.getAllTaxSetup(dataFilter);
 };
 
 module.exports = {

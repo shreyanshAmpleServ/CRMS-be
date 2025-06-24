@@ -151,7 +151,7 @@ const deletePriceBook = async (orderId) => {
 };
 
 
-const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
+const getAllPriceBook = async (search ,page , size ,startDate, endDate,dataFilter) => {
   try {
     page = page || 1 ;
     size = size || 10;
@@ -164,6 +164,9 @@ const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
       filters.OR = [
         { name: { contains: search.toLowerCase() }} 
       ];
+    }
+    if (dataFilter == "Active") {
+      filters.is_active = "Y"
     }
 
     // Handle date filtering

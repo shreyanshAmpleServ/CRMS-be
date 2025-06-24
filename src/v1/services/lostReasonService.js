@@ -16,8 +16,8 @@ const deleteLostReason = async (id) => {
     return await lostReasonModel.deleteLostReason(id);
 };
 
-const getAllLostReasons = async () => {
-    return await lostReasonModel.getAllLostReasons();
+const getAllLostReasons = async (dataFilter) => {
+    return await lostReasonModel.getAllLostReasons(dataFilter);
 };
 
 module.exports = {

@@ -16,8 +16,8 @@ const deleteContactStage = async (id) => {
     return await contactStageModel.deleteContactStage(id);
 };
 
-const getAllContactStages = async () => {
-    return await contactStageModel.getAllContactStages();
+const getAllContactStages = async (dataFilter) => {
+    return await contactStageModel.getAllContactStages(dataFilter);
 };
 
 module.exports = {

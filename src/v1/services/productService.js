@@ -16,8 +16,11 @@ const deleteProduct = async (id) => {
     return await productModal.deleteProduct(id);
 };
 
-const getAllProduct = async (search ,page , size ,startDate,endDate) => {
-    return await productModal.getAllProduct(search,page , size ,startDate,endDate);
+const getAllProduct = async (search ,page , size ,startDate,endDate,dataFilter) => {
+    return await productModal.getAllProduct(search,page , size ,startDate,endDate,dataFilter);
+};
+const generateProductCode = async () => {
+    return await productModal.generateProductCode();
 };
 
 module.exports = {
@@ -26,4 +29,5 @@ module.exports = {
     updateProduct,
     deleteProduct,
     getAllProduct,
+    generateProductCode,
 };

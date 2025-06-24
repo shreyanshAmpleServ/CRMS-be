@@ -40,7 +40,8 @@ const deleteCallPurpose = async (req, res, next) => {
 
 const getAllCallPurpose = async (req, res, next) => {
     try {
-        const callPurposes = await callPurposeService.getAllCallPurposes();
+        const {dataFilter} = req.query
+        const callPurposes = await callPurposeService.getAllCallPurposes(dataFilter);
         res.status(200).success(null, callPurposes);
     } catch (error) {
         next(error);

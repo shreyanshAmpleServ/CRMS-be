@@ -101,19 +101,11 @@ const deleteSetup = async (id) => {
 };
 
 // Get all taxs and include their roles
-const getAllTaxSetup = async () => {
+const getAllTaxSetup = async (dataFilter) => {
   try {
     const taxs = await prisma.crms_m_tax_setup.findMany({
-      // include:{
-      //   Account:{
-      //     select:{
-      //       firstName:true,
-      //       lastName:true,
-      //       id:true
-      //     }
-      //   },
-       
-      // },
+      where:dataFilter=="Active" ? { is_active: "Y" } : {},
+
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 

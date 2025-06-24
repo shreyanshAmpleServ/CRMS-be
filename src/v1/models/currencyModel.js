@@ -5,6 +5,12 @@ const prisma = new PrismaClient();
 
 const createCurrency = async (data) => {
     try {
+        if (data.is_default == "Y") {
+            await prisma.Currency.updateMany({
+              where: { is_default: "Y" },
+              data: { is_default: "N" },
+            });
+          }
         const currency = await prisma.Currency.create({
             data: {
                 name: data.name,
@@ -38,6 +44,12 @@ const findCurrencyById = async (id) => {
 
 const updateCurrency = async (id, data) => {
     try {
+        if (data.is_default == "Y") {
+            await prisma.Currency.updateMany({
+              where: { is_default: "Y" },
+              data: { is_default: "N" },
+            });
+          }
         const updatedCurrency = await prisma.Currency.update({
             where: { id: parseInt(id) },
             data: {
@@ -61,9 +73,10 @@ const deleteCurrency = async (id) => {
     }
 };
 
-const getAllCurrency = async () => {
+const getAllCurrency = async (dataFilter) => {
     try {
         const Currency = await prisma.Currency.findMany({
+            where:dataFilter=="Active" ? { is_active: "Y" } : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

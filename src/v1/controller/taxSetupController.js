@@ -42,7 +42,8 @@ const deleteSetup = async (req, res, next) => {
 
 const getAllTaxSetup = async (req, res, next) => {
     try {
-        const taxs = await taxSetupService.getAllTaxSetup();
+        const {dataFilter} = req.query
+        const taxs = await taxSetupService.getAllTaxSetup(dataFilter);
         res.status(200).success(null, taxs);
     } catch (error) {
         next(error);

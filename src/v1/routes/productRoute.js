@@ -10,5 +10,6 @@ router.get('/products/:id', authenticateToken, productController.findProductById
 router.put('/products/:id', authenticateToken, upload.single('product_image'), productController.updateProduct);
 router.delete('/products/:id', authenticateToken, productController.deleteProduct);
 router.get('/products', authenticateToken, productController.getAllProduct);
+router.get('/get-product-code', authenticateToken, productController.generateProductCode);
 
 module.exports = router;

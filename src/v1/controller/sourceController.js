@@ -40,7 +40,8 @@ const deleteSource = async (req, res, next) => {
 
 const getAllSources = async (req, res, next) => {
   try {
-    const sources = await sourceService.getAllSources();
+    const {dataFilter }  = req.query
+    const sources = await sourceService.getAllSources(dataFilter);
     res.status(200).success(null, sources);
   } catch (error) {
     next(error);

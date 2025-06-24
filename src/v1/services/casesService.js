@@ -19,8 +19,8 @@ const deleteCase = async (id) => {
 const getAllCases = async (search ,page , size,startDate,endDate) => {
   return await casesModel.getAllCases(search ,page , size,startDate,endDate);
 };
-const getAllCaseReasons = async () => {
-  return await casesModel.getAllCaseReasons();
+const getAllCaseReasons = async (dataFilter) => {
+  return await casesModel.getAllCaseReasons(dataFilter);
 };
 const generateCaseNumber = async () => {
   return await casesModel.generateCaseNumber();

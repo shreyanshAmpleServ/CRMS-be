@@ -29,8 +29,8 @@ const deleteVendor = async (id) => {
   return await vendorModel.deleteVendor(id);
 };
 
-const getAllVendors = async (search,page,size ,startDate,endDate) => {
-  return await vendorModel.getAllVendors(search,page,size ,startDate,endDate);
+const getAllVendors = async (search,page,size ,startDate,endDate,dataFilter) => {
+  return await vendorModel.getAllVendors(search,page,size ,startDate,endDate,dataFilter);
 };
 
 module.exports = {

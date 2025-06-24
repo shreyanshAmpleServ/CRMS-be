@@ -63,9 +63,10 @@ const deleteIndustry = async (id) => {
 };
 
 // Get all industries
-const getAllIndustries = async () => {
+const getAllIndustries = async (dataFilter) => {
     try {
         const industries = await prisma.Industries.findMany({
+            where:dataFilter === "Active" ? {is_active : "Y"} : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

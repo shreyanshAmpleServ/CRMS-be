@@ -63,9 +63,10 @@ const deleteSource = async (id) => {
 };
 
 // Get all sources
-const getAllSources = async () => {
+const getAllSources = async (dataFilter) => {
   try {
     const sources = await prisma.Sources.findMany({
+      where: dataFilter == "Active" ? {is_active : "Y" }  : {},
       orderBy: [
         { updatedate: 'desc' },
         { createdate: 'desc' },

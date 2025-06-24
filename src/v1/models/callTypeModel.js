@@ -63,9 +63,10 @@ const deleteCallType = async (id) => {
 };
 
 // Get all call types
-const getAllCallTypes = async () => {
+const getAllCallTypes = async (dataFilter) => {
     try {
         const callTypes = await prisma.crms_m_calltype.findMany({
+            where:dataFilter== "Active" ? {is_active : "Y" } : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

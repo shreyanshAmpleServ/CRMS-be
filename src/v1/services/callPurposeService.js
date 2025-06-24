@@ -16,8 +16,8 @@ const deleteCallPurpose = async (id) => {
     return await callPurposesModel.deleteCallPurpose(id);
 };
 
-const getAllCallPurposes = async () => {
-    return await callPurposesModel.getAllCallPurposes();
+const getAllCallPurposes = async (dataFilter) => {
+    return await callPurposesModel.getAllCallPurposes(dataFilter);
 };
 
 module.exports = {

@@ -63,9 +63,10 @@ const deleteCallPurpose = async (id) => {
 };
 
 // Get all call purposes
-const getAllCallPurposes = async () => {
+const getAllCallPurposes = async (dataFilter) => {
     try {
         const callPurpose = await prisma.crms_m_callpurpose.findMany({
+            where:dataFilter== "Active" ? {is_active : "Y" } : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

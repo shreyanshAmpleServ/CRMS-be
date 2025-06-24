@@ -63,9 +63,17 @@ const deleteProductCategory = async (id) => {
 };
 
 // Get all crms_m_product_category
-const getAllProductCategory = async () => {
+const getAllProductCategory = async (search, dataFilter) => {
     try {
         const productCategory = await prisma.crms_m_product_category.findMany({
+            where: {
+                ...(dataFilter == "Active" && { is_active: "Y" }),
+                ...(search && {
+                    name: {
+                        contains: search.toLowerCase()
+                    }
+                })
+            },
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

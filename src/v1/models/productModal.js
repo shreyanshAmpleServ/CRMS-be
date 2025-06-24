@@ -156,13 +156,13 @@ const hasReferences = await prisma.crms_d_order_items.findFirst({
 
 if (hasReferences) {
   console.log("Product is referenced in order items.");
-  throw new Error('Cannot delete product: It is referenced in order items.');
+  throw new Error('It is referenced in order items.');
 }
     await prisma.crms_m_products.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting Product: ${error.message}`, 500);
+    throw new CustomError(`Error deleting Product: ${error.message}`, error.status || 500);
   }
 };
 
@@ -200,7 +200,7 @@ if (hasReferences) {
 //     throw new CustomError("Error retrieving users", 503);
 //   }
 // };
-const getAllProduct = async (search ,page , size ,startDate, endDate) => {
+const getAllProduct = async (search ,page , size ,startDate, endDate,dataFilter) => {
   try {
     page = page || 1 ;
     size = size || 10;
@@ -232,6 +232,9 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
           name: { contains: search.toLowerCase() },
         },
       ];
+    }
+    if(dataFilter == "Active"){
+      filters.is_active = "Y"
     }
     // Handle date filtering
     if (startDate && endDate) {
@@ -294,7 +297,19 @@ const getAllProduct = async (search ,page , size ,startDate, endDate) => {
     throw new CustomError("Error retrieving products", 503);
   }
 };
-
+// Generate Product Code
+const generateProductCode = async () => {
+  try {
+    const latestProduct = await prisma.crms_m_products.findFirst({
+      orderBy: { id: 'desc' }
+    });
+     const nextId = latestProduct ? latestProduct.id + 1 : 1;
+    return `ITEM-001${nextId}`;
+} catch (error) {
+    console.log("Error to generation product code : ", error)
+    throw new CustomError('Error retrieving product code', 503);
+}
+};
 
 module.exports = {
   createProduct,
@@ -302,4 +317,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getAllProduct,
+  generateProductCode,
 };

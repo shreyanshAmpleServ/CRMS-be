@@ -65,19 +65,27 @@ const deleteProduct = async (req, res, next) => {
 
 const getAllProduct = async (req, res, next) => {
     try {
-        const { page , size ,search ,startDate,endDate  } = req.query;
-        const products = await productService.getAllProduct(search,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
+        const { page , size ,search ,startDate,endDate , dataFilter } = req.query;
+        const products = await productService.getAllProduct(search,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate), dataFilter);
         res.status(200).success(null , products );
         // res.status(200).json({ success: true,   message:"product get successfully" , products });
     } catch (error) {
         next(error);
     }
 };
-
+const generateProductCode = async (req, res, next) => {
+    try {
+        const ProductCode = await productService.generateProductCode();
+        res.status(200).success(null , ProductCode );
+    } catch (error) {
+        next(error);
+    }
+};
 module.exports = {
     createProduct,
     findProductById,
     updateProduct,
     deleteProduct,
     getAllProduct,
+    generateProductCode,
 };

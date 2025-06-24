@@ -18,7 +18,7 @@ const createQuotation = async (orderData,orderItemsData) => {
           createdate: new Date(),
           updatedate: new Date(),
           updatedby: orderData.createdby || 1,
-          updatedby: orderData.createdby || 1,
+          createdby: orderData.createdby || 1,
         },
       });
       // Step 2: Create OrderItems using the created order's ID
@@ -68,6 +68,77 @@ const createQuotation = async (orderData,orderItemsData) => {
     throw new Error("Failed to create quotation and quotation items");
   }
 };
+// Sync quotation
+const syncQuotation = async (orderData, user) => {
+  const failedQuotations = [];
+  let successCount = 0;
+
+  try {
+    if (!Array.isArray(orderData) || orderData.length === 0) {
+      return { message: "No data to sync", success: true };
+    }
+
+    for (const quotation of orderData) {
+      const { orderItemsData, quotation_code, ...QuoteData } = quotation;
+      const quotationData = { ...QuoteData, createdby: user };
+
+      try {
+        await prisma.$transaction(async (prisma) => {
+          const createdOrder = await prisma.crms_d_quotations.create({
+            data: {
+              ...quotationData,
+              quotation_code,
+              vendor_id: Number(quotationData?.vendor_id) || null,
+              currency: Number(quotationData?.currency) || null,
+              sales_type: Number(quotationData?.sales_type) || null,
+              rounding_amount: Number(quotationData?.rounding_amount) || null,
+              createdate: new Date(),
+              updatedate: new Date(),
+              updatedby: user || 1,
+              createdby: user || 1,
+            },
+          });
+
+          await prisma.crms_d_quotation_items.createMany({
+            data: orderItemsData.map((item) => ({
+              ...item,
+              item_id: Number(item?.item_id) || null,
+              tax_id: Number(item?.tax_id) || null,
+              parent_id: createdOrder.id,
+            })),
+          });
+        });
+
+        successCount++;
+      } catch (err) {
+        console.error(`Error syncing quotation ${quotation_code}:`, err);
+
+        const cleanedError = (() => {
+          if (err?.meta?.cause) return err.meta.cause;
+        
+          const message = err?.message || "";
+          const lines = message.split('\n').filter(line => line.trim() !== "");
+        
+          return lines.length > 0 ? lines[lines.length - 1].trim() : "An unknown error occurred";
+        })();
+        failedQuotations.push({
+          quotation_code,
+          error: cleanedError,
+        });
+      }
+    }
+
+    return {
+      success: failedQuotations.length === 0,
+      message: `Sync completed with ${successCount} success(es) and ${failedQuotations.length} failure(s)`,
+      failedQuotations,
+    };
+  } catch (err) {
+    console.error("Unexpected sync failure:", err);
+    throw new Error("Unexpected failure during sync process");
+  }
+};
+
 
 // Update a quotation
 const updateQuotaion = async (orderId, orderData, orderItemsData) => {
@@ -313,5 +384,6 @@ module.exports = {
   updateQuotaion,
   deleteQuotation,
   getAllQuotaion,
-  generateQuotaionCode
+  generateQuotaionCode,
+  syncQuotation
 };

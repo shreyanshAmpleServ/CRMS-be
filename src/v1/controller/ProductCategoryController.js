@@ -40,7 +40,8 @@ const deleteProductCategory = async (req, res, next) => {
 
 const getAllProductCategory = async (req, res, next) => {
     try {
-        const categories = await productCategoryService.getAllProductCategory();
+        const {search,dataFilter} = req.query
+        const categories = await productCategoryService.getAllProductCategory(search,dataFilter);
         res.status(200).success(null, categories);
     } catch (error) {
         next(error);

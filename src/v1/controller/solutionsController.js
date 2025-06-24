@@ -58,8 +58,8 @@ const deleteSolution = async (req, res, next) => {
 
 const getAllSolution = async (req, res, next) => {
   try {
-    const { page , size , search ,startDate,endDate  } = req.query;
-    const solutions = await solutionsService.getAllSolution(search ,Number(page), Number(size) ,startDate && moment(startDate),endDate && moment(endDate));
+    const { page , size , search ,startDate,endDate,dataFilter  } = req.query;
+    const solutions = await solutionsService.getAllSolution(search ,Number(page), Number(size) ,startDate && moment(startDate),endDate && moment(endDate),dataFilter);
     res.status(200).success(null, solutions);
   } catch (error) {
     next(error);

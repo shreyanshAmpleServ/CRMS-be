@@ -16,8 +16,8 @@ const deleteManufacturer = async (id) => {
     return await ManufacturerModel.deleteManufacturer(id);
 };
 
-const getAllManufacturer = async (search,page,size) => {
-    return await ManufacturerModel.getAllManufacturer(search,page,size);
+const getAllManufacturer = async (search,page,size,dataFilter) => {
+    return await ManufacturerModel.getAllManufacturer(search,page,size,dataFilter);
 };
 
 module.exports = {

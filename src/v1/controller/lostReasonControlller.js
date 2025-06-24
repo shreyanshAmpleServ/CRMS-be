@@ -40,7 +40,8 @@ const deleteLostReason = async (req, res, next) => {
 
 const getAllLostReasons = async (req, res, next) => {
     try {
-        const lostReasons = await lostReasonService.getAllLostReasons();
+        const {dataFilter } = req.query
+        const lostReasons = await lostReasonService.getAllLostReasons(dataFilter);
         res.status(200).success(null, lostReasons);
     } catch (error) {
         next(error);

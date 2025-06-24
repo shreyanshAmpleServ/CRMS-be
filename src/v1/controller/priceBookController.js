@@ -50,8 +50,8 @@ const deletePriceBook = async (req, res, next) => {
 
 const getAllPriceBook = async (req, res, next) => {
     try {
-        const { page , size ,search ,startDate,endDate  } = req.query;
-        const products = await priceBookService.getAllPriceBook(search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
+        const { page , size ,search ,startDate,endDate ,dataFilter } = req.query;
+        const products = await priceBookService.getAllPriceBook(search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate),dataFilter);
         res.status(200).success(null , products );
         // res.status(200).json({ success: true,   message:"product get successfully" , products });
     } catch (error) {

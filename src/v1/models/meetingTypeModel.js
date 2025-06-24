@@ -63,9 +63,10 @@ const deleteMeetingType = async (id) => {
 };
 
 // Get all meeting types
-const getAllMeetingTypes = async () => {
+const getAllMeetingTypes = async (dataFilter) => {
     try {
         const meetingTypes = await prisma.crms_m_meetingtype.findMany({
+            where : dataFilter == "Active" ? {is_active : "Y"}  : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },

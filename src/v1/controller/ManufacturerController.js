@@ -40,8 +40,8 @@ const deleteManufacturer = async (req, res, next) => {
 
 const getAllManufacturer = async (req, res, next) => {
     try {
-        const {search,page,size} = req.query
-        const categories = await ManufacturerService.getAllManufacturer(search,Number(page),Number(size));
+        const {search,page,size,dataFilter} = req.query
+        const categories = await ManufacturerService.getAllManufacturer(search,Number(page),Number(size),dataFilter);
         res.status(200).success(null, categories);
     } catch (error) {
         next(error);

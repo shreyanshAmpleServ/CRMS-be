@@ -77,7 +77,8 @@ const getAllCases = async (req, res, next) => {
 };
 const getAllCaseReasons = async (req, res, next) => {
   try {
-    const casess = await casesService.getAllCaseReasons();
+    const {dataFilter} = req.query
+    const casess = await casesService.getAllCaseReasons(dataFilter);
     res.status(200).success(null, casess);
   } catch (error) {
     next(error);

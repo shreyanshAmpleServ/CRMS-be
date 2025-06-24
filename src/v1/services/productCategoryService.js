@@ -16,8 +16,8 @@ const deleteProductCategory = async (id) => {
     return await productCategoryModel.deleteProductCategory(id);
 };
 
-const getAllProductCategory = async () => {
-    return await productCategoryModel.getAllProductCategory();
+const getAllProductCategory = async (search,dataFilter) => {
+    return await productCategoryModel.getAllProductCategory(search,dataFilter);
 };
 
 module.exports = {

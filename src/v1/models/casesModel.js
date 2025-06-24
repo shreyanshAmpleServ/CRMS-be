@@ -192,9 +192,10 @@ const getAllCases = async (search ,page , size,startDate, endDate) => {
   }
 };
 // Get all case reasons 
-const getAllCaseReasons = async () => {
+const getAllCaseReasons = async (dataFilter) => {
   try {
     const cases = await prisma.crms_m_case_reasons.findMany({
+      where:dataFilter == "Active" ? {is_active :"Y"} : {},
       include: {
         case_reasons: true,
       },

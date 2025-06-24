@@ -27,6 +27,16 @@ const createQuotation = async (req, res, next) => {
         next(error);
     }
 };
+const syncQuotation = async (req, res, next) => {
+    try {
+        const product = await quotaionService.syncQuotation(req.body.quotations, req.user.id);
+
+        // const product = await quotaionService.createQuotation(orderData , orderItemsData);
+        res.status(201).success('Quotation synced successfully', product);
+    } catch (error) {
+        next(error);
+    }
+};
 
 const getQuotationById = async (req, res, next) => {
     try {
@@ -112,5 +122,6 @@ module.exports = {
   updateQuotaion,
   deleteQuotation,
   getAllQuotaion,
-  generateQuotaionCode
+  generateQuotaionCode,
+  syncQuotation
 };

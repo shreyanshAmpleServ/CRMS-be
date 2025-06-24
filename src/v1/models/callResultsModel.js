@@ -63,9 +63,10 @@ const deleteCallResult = async (id) => {
 };
 
 // Get all call results
-const getAllCallResults = async () => {
+const getAllCallResults = async (dataFilter) => {
     try {
         const callStatuses = await prisma.crms_m_callresult.findMany({
+            where:dataFilter== "Active" ? {is_active : "Y" } : {},
             orderBy: [
                 { updatedate: 'desc' },
                 { createdate: 'desc' },
