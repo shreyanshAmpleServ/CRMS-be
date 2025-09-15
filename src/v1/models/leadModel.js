@@ -1,23 +1,167 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient,PrismaClientKnownRequestError } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 // Helper function to define fields returned for a lead
+
+
+const serializeContact = (data) => {
+  const contact = {
+    firstName: data.first_name || "",
+    lastName: data.last_name || "",
+    jobTitle: data.jobTitle || "",
+    email: data.email || "",
+    emailOptOut: data.emailOptOut === "Y" ? true : false,
+    phone1: data.phone || null,
+    phone2: data.mobile || null,
+    fax: data.fax || "",
+    dateOfBirth: data.dateOfBirth || null,
+    reviews: data.reviews || 0,
+    // owner: data.owner || null,
+    tags: data.tags || "",
+    currency: data.currency || "",
+    language: data.language || "",
+    description: data.description || "",
+    streetAddress: data.street || "",
+    city: data.city || "",
+    image: data.company_icon || "",
+    zipcode: data.zipcode || "",
+    visibility: data.visibility || "",
+    createdate: new Date(),
+    updatedate: new Date(),
+
+  };
+
+  // Serialize social profiles if present
+  if (data.socialProfiles) {
+    contact.socialProfiles = JSON.stringify(data.socialProfiles);
+  }
+
+  // Connect to company if company_id exists
+  if (data.company_id) {
+    contact.company_details = {
+      connect: { id: Number(data.company_id) },
+    };
+  }
+  if (data.source) {
+    contact.source_details = {
+      connect: { id: Number(data.source) },
+    };
+  }
+  if (data.industry) {
+    contact.industry_details = {
+      connect: { id: Number(data.industry) },
+    };
+  }
+  if (data.state) {
+    contact.contact_State = {
+      connect: { id: Number(data.state) },
+    };
+  }
+  if (data.country) {
+    contact.contact_Country = {
+      connect: { id: Number(data.country) },
+    };
+  }
+  if (data.owner) {
+    contact.crms_m_user = {
+      connect: { id: Number(data.lead_owner) },
+    };
+  }
+
+  return contact;
+};
+const serializeLead = (data) => {
+  const lead = {
+    first_name: data.first_name || "",
+    last_name: data.last_name || "",
+    title: data.title || "",
+    jobTitle: data.jobTitle || "",
+    email: data.email || "",
+    secondary_email: data.secondary_email || "",
+    email_opt_out: data.email_opt_out === "Y" ? "Y" : "N",
+    phone: data.phone || null,
+    fax: data.fax || "",
+    mobile: data.mobile || null,
+    website: data.website || "",
+    rating: data.rating || "",
+    tags: data.tags || "",
+    revenue_currency: data.revenue_currency || "",
+    annual_revenue: data.annual_revenue ? Number(data.annual_revenue) : null,
+    no_of_employees: data.no_of_employees ? Number(data.no_of_employees) : null,
+    street: data.street || "",
+    city: data.city || "",
+    zipcode: data.zipcode || "",
+    description: data.description || "",
+    company_icon: data.company_icon || "",
+    is_active: data.is_active || "Y",
+    createdate: new Date(),
+    updatedate: new Date(),
+    createdby: data.createdby || 1,
+    updatedby: data.updatedby || null,
+    log_inst: data.log_inst || 1
+  };
+
+  // Social Profiles
+  if (data.facebook_ac) lead.facebook_ac = data.facebook_ac;
+  if (data.skype_id) lead.skype_id = data.skype_id;
+  if (data.twitter_ac) lead.twitter_ac = data.twitter_ac;
+  if (data.linked_in_ac) lead.linked_in_ac = data.linked_in_ac;
+  if (data.whatsapp_ac) lead.whatsapp_ac = data.whatsapp_ac;
+  if (data.instagram_ac) lead.instagram_ac = data.instagram_ac;
+
+  // Relational connections
+  if (data.lead_owner) {
+    lead.crms_m_user = {
+      connect: { id: Number(data.lead_owner) },
+    };
+  }
+
+  if (data.company_id) {
+    lead.lead_company = {
+      connect: { id: Number(data.company_id) },
+    };
+  }
+
+  if (data.lead_source) {
+    lead.crms_m_sources = {
+      connect: { id: Number(data.lead_source) },
+    };
+  }
+
+  if (data.lead_status) {
+    lead.crms_m_lost_reasons = {
+      connect: { id: Number(data.lead_status) },
+    };
+  }
+
+  if (data.industry) {
+    lead.crms_m_industries = {
+      connect: { id: Number(data.industry) },
+    };
+  }
+
+  if (data.state) {
+    lead.lead_State = {
+      connect: { id: Number(data.state) },
+    };
+  }
+
+  if (data.country) {
+    lead.lead_Country = {
+      connect: { id: Number(data.country) },
+    };
+  }
+
+  return lead;
+};
+
 
 const getLeadWithReferences = async (leadId) => {
   const lead = await prisma.crms_leads.findUnique({
     where: { id: parseInt(leadId) },
     select: {
       id: true,
-      crms_m_user: {
-        select: {
-          id: true,
-          full_name: true,
-          email: true,
-          phone: true,
-          profile_img: true,
-        },
-      },
       crms_m_lost_reasons: {
         select: {
           id: true,
@@ -50,6 +194,9 @@ const getLeadWithReferences = async (leadId) => {
       lead_State: {
         select: { id: true, name: true },
       },
+      crms_m_user: {
+        select: { id: true, full_name: true },
+      },
       company_icon: true,
       company_id: true,
       first_name: true,
@@ -60,7 +207,8 @@ const getLeadWithReferences = async (leadId) => {
       fax: true,
       mobile: true,
       website: true,
-
+      lead_owner:true,
+      jobTitle:true,
       no_of_employees: true,
       annual_revenue: true,
       revenue_currency: true,
@@ -83,6 +231,7 @@ const getLeadWithReferences = async (leadId) => {
       is_active: true,
       createdate: true,
       updatedate: true,
+
     },
   });
 
@@ -94,27 +243,24 @@ const getLeadWithReferences = async (leadId) => {
 // Create a new lead
 const createLead = async (data) => {
   try {
+    const {is_contact, ...datas} = data
     // Create the lead
+    const lead = await prisma.$transaction(async (prisma) => {
+      const serializeLeads = serializeLead({...datas})
     const lead = await prisma.crms_leads.create({
-      data: {
-        ...data,
-        state: Number(data.state) || null,
-        country: Number(data.country) || null,
-        company_id: data.company_id || null,
-        is_active: data.is_active || "Y",
-        email_opt_out: data.email_opt_out || "N",
-        createdby: data.createdby || 1,
-        log_inst: data.log_inst || 1,
-      },
-      include:{
-        crms_m_user: {
-          select: {
-            id: true,
-            full_name: true,
-            email: true,
-            phone: true,
-          },
-        },
+      data: serializeLeads,
+      // {
+        // ...datas,
+        // state: Number(datas.state) || null,
+        // country: Number(datas.country) || null,
+        // company_id: datas.company_id || null,
+        // is_active: datas.is_active || "Y",
+        // email_opt_out: datas.email_opt_out || "N",
+        // createdby: datas.createdby || 1,
+        // log_inst: datas.log_inst || 1,
+            
+      // },
+      include: {
         crms_m_lost_reasons: {
           select: {
             id: true,
@@ -150,6 +296,27 @@ const createLead = async (data) => {
       },
     });
 
+    if(is_contact){
+      const serializedData = serializeContact({ ...datas});
+    console.log("DAta : ",serializedData,is_contact)
+      const contact = await prisma.crms_m_contact.create({
+        data: {
+          ...serializedData,
+          is_active: datas.is_active || "Y",
+          log_inst: datas.log_inst || 1,
+          // state: Number(datas.state) || null,
+          // country: Number(datas.country) || null,
+          createdate: new Date(),
+          updatedate: new Date(),
+        }
+      });
+      console.log("345678 : ",contact)
+    }
+
+    return lead;
+  })
+    
+
     // Return the lead with references
     return await getLeadWithReferences(lead.id);
   } catch (error) {
@@ -157,6 +324,7 @@ const createLead = async (data) => {
     throw new CustomError(`Error creating lead: ${error.message}`, 500);
   }
 };
+
 
 // Update a lead and its references
 const updateLead = async (id, data) => {
@@ -166,18 +334,21 @@ const updateLead = async (id, data) => {
     if (data?.lead_status_update) {
       updateData.lead_status = data.lead_status;
     }
+    const serializeLeads = serializeLead(updateData)
+
     const updatedLead = await prisma.crms_leads.update({
       where: { id: parseInt(id) },
-      data: {
-        ...data,
-        state: Number(data.state) || null,
-        country: Number(data.country) || null,
-        is_active: data.is_active || "Y",
-        updatedate: new Date(),
-        email_opt_out: data.email_opt_out || "N",
-        createdby: data.createdby || 1,
-        log_inst: data.log_inst || 1,
-      },
+      data: {...serializeLeads},
+      // data: {
+      //   ...data,
+      //   state: Number(data.state) || null,
+      //   country: Number(data.country) || null,
+      //   is_active: data.is_active || "Y",
+      //   updatedate: new Date(),
+      //   email_opt_out: data.email_opt_out || "N",
+      //   createdby: data.createdby || 1,
+      //   log_inst: data.log_inst || 1,
+      // },
       include:{
         crms_m_user: {
           select: {
@@ -262,6 +433,18 @@ const deleteLead = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this lead because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error deleting lead: ${error.message}`, 500);
   }
 };
@@ -376,60 +559,137 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
   }
 };
 
+
 // Get all leads grouped by lost reasons
-const getAllLeadsGroupedByLostReasons = async () => {
+const getAllLeadsGroupedByLostReasons = async (search) => {
   try {
-    const leads = await prisma.LostReasons.findMany({
+    // Step 1: Get all lost reasons
+    const lostReasons = await prisma.LostReasons.findMany({
       select: {
         id: true,
         name: true,
         colorCode: true,
-        crms_leads: {
-          select: {
-            id: true,
-            company_id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            phone: true,
-            title: true,
-            annual_revenue: true,
-            street: true,
-            city: true,
-            state: true,
-            zipcode: true,
-            country: true,
-            is_active: true,
-            createdate: true,
-            updatedate: true,
-          },
-        },
       },
       orderBy: {
-        order: "asc", // Orders by name in ascending order
+        order: 'asc',
       },
     });
 
-    return leads.map((lostReason) => {
-      const total_lead = lostReason.crms_leads.length;
-      const total_revenue = lostReason.crms_leads.reduce(
-        (sum, lead) => sum + (lead.annual_revenue || 0),
-        0
-      );
+  const leadFilter = {
+    ...(search && {
+      OR: [
+        {
+          first_name: {
+            contains: search.toLowerCase(),
+           
+          },
+        },
+        {
+          title: {
+            contains: search.toLowerCase(),
+          },
+        },
+      ],
+    }),
+  };
 
-      return {
-        ...lostReason,
-        total_lead,
-        total_revenue,
-      };
+  // const leads = await prisma.LostReasons.findMany({
+  //   select: {
+  //     id: true,
+  //     name: true,
+  //     colorCode: true,
+  //     crms_leads: {
+  //       select: {
+  //         id: true,
+  //         company_id: true,
+  //         first_name: true,
+  //         last_name: true,
+  //         email: true,
+  //         phone: true,
+  //         title: true,
+  //         annual_revenue: true,
+  //         street: true,
+  //         city: true,
+  //         state: true,
+  //         zipcode: true,
+  //         country: true,
+  //         is_active: true,
+  //         createdate: true,
+  //         updatedate: true,
+  //       },
+  //     },
+  //   },
+  //   orderBy: {
+  //     order: "asc", // Orders by name in ascending order
+  //   },
+  // });
+
+     // Step 3: Get all leads with their lead_status
+   
+     const leads = await prisma.crms_leads.findMany({
+      where: {
+        ...leadFilter,
+      },
+      select: {
+        id: true,
+        lead_status: true,
+        first_name: true,
+        last_name: true,
+        title: true,
+        email: true,
+        phone: true,
+        company_id: true,
+        annual_revenue: true,
+        street: true,
+        city: true,
+        state: true,
+        zipcode: true,
+        country: true,
+        is_active: true,
+        createdate: true,
+        updatedate: true,
+        company_icon: true,
+      },
     });
-  } catch (error) {
-    console.log(error);
-    throw new CustomError(
-      `Error retrieving leads grouped by lost reasons: ${error.message}`,
-      503
+    // return leads.map((lostReason) => {
+    //   const total_lead = lostReason.crms_leads.length;
+    //   const total_revenue = lostReason.crms_leads.reduce(
+    //     (sum, lead) => sum + Number(lead.annual_revenue || 0),
+    //     0
+    //   );
+
+  //   return {
+  //     ...lostReason,
+  //     total_lead,
+  //     total_revenue,
+  //   };
+  // });
+  // Step 4: Group leads by lead_status
+  const leadsGrouped = lostReasons.map((reason) => {
+    const matchedLeads = leads.filter(
+      (lead) => lead.lead_status === reason.id
     );
-  }
+    const total_revenue = matchedLeads.reduce(
+      (sum, lead) => sum + Number(lead.annual_revenue || 0),
+      0
+    );
+
+    return {
+      ...reason,
+      crms_leads: matchedLeads,
+      total_lead: matchedLeads.length,
+      total_revenue,
+    };
+  });
+
+  return leadsGrouped;
+} catch (error) {
+  console.log(error);
+  throw new CustomError(
+    `Error retrieving leads grouped by lost reasons: ${error.message}`,
+    503
+  );
+}
 };
 
 module.exports = {

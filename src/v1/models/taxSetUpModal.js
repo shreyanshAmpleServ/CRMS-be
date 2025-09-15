@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new tax
@@ -96,26 +97,57 @@ const deleteSetup = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this tax setup because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error deleting tax: ${error.message}`, 500);
   }
 };
 
 // Get all taxs and include their roles
-const getAllTaxSetup = async (dataFilter) => {
+const getAllTaxSetup = async (is_active,search, page, size, startDate, endDate) => {
   try {
-    const taxs = await prisma.crms_m_tax_setup.findMany({
-      where:dataFilter=="Active" ? { is_active: "Y" } : {},
+    page = page || 1;
+    size = size || 10;
+    const skip = (page - 1) * size;
 
+    const filters = {};
+
+    // Handle search
+    if (search) {
+      filters.OR = [{ name: { contains: search.toLowerCase() } }];
+    }
+    if(is_active){
+      filters.is_active =  { equals: is_active }
+    }
+    const taxs = await prisma.crms_m_tax_setup.findMany({
+      where: filters,
+      skip,
+      take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
+    const totalCount = await prisma.crms_m_tax_setup.count( { where: filters});
 
-    // Fetch roles for each tax
-    return taxs;
+    return  {
+      data: taxs,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
     throw new CustomError("Error retrieving Taxs", 503);
   }
 };
-
 module.exports = {
   createTaxSetup,
   findTaxSetupById,

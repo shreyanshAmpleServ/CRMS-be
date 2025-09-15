@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Serialize `tags` before saving it
@@ -80,8 +81,8 @@ const createDeal = async (data) => {
 
     return parseTags(result);
   } catch (error) {
-    console.log("Error to Create Deal : ", error);
-    throw new CustomError(`Error creating deal: ${error.message}`, 500);
+    console.log("Error to Create Opportunity : ", error);
+    throw new CustomError(`Error creating Opportunity: ${error.message}`, 500);
   }
 };
 
@@ -143,7 +144,7 @@ const updateDeal = async (id, data) => {
 
     return parseTags(result);
   } catch (error) {
-    throw new CustomError(`Error updating deal: ${error.message}`, 500);
+    throw new CustomError(`Error updating Opportunity: ${error.message}`, 500);
   }
 };
 
@@ -163,7 +164,7 @@ const findDealById = async (id) => {
     });
     return parseTags(deal);
   } catch (error) {
-    throw new CustomError("Error finding deal by ID", 503);
+    throw new CustomError("Error finding Opportunity by ID", 503);
   }
 };
 
@@ -253,8 +254,8 @@ const getAllDeals = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error Deal get : ", error);
-    throw new CustomError("Error retrieving deals", 503);
+    console.log("Error opportunity get : ", error);
+    throw new CustomError("Error retrieving opportunitys", 503);
   }
 };
 
@@ -270,7 +271,19 @@ const deleteDeal = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting deal: ${error.message}`, 500);
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this opportunity because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
+    throw new CustomError(`Error deleting opportunity: ${error.message}`, 500);
   }
 };
 module.exports = {

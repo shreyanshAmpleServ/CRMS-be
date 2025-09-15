@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Helper function to define fields returned for a user
@@ -156,10 +157,11 @@ const updateUser = async (id, data) => {
 // Find a user by email and include role
 const findUserByEmail = async (email) => {
     try {
+        
         const user = await prisma.crms_m_user.findFirst({
-            where: { email },
+            where: { email : email },
         });
-
+        
         if (!user) throw new CustomError('User not found', 404);
 
         return await getUserWithRole(user.id,true);
@@ -191,6 +193,18 @@ const deleteUser = async (id) => {
             where: { id: parseInt(id) },
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this user because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting user: ${error.message}`, 500);
     }
 };

@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new  Purchase Order
@@ -199,6 +200,18 @@ const deletePurchaseOrder = async (orderId) => {
     return result;
   } catch (error) {
     console.error("Failed to delete purchase order and order items:", error);
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this purchase order and associated items because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new Error("Failed to delete purchase order and associated items");
   }
 };

@@ -1,13 +1,80 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
-// Serialize `socialProfiles` before saving it
-const serializeSocialProfiles = (data) => {
+// // Serialize `socialProfiles` before saving it
+// const serializeContact = (data) => {
+//   if (data.socialProfiles) {
+//     data.socialProfiles = JSON.stringify(data.socialProfiles);
+//   }
+//   return data;
+// };
+const serializeContact = (data) => {
+  const contact = {
+    firstName: data.firstName || "",
+    lastName: data.lastName || "",
+    jobTitle: data.jobTitle || "",
+    email: data.email || "",
+    emailOptOut: data.emailOptOut === "Y" ? true : false,
+    phone1: data.phone1 || null,
+    phone2: data.phone2 || null,
+    fax: data.fax || "",
+    dateOfBirth: data.dateOfBirth || null,
+    reviews: data.reviews || 0,
+    // owner: data.owner || null,
+    tags: data.tags || "",
+    currency: data.currency || "",
+    language: data.language || "",
+    description: data.description || "",
+    streetAddress: data.streetAddress || "",
+    city: data.city || "",
+    image: data.company_icon || "",
+    zipcode: data.zipcode || "",
+    visibility: data.visibility || "",
+    createdate: new Date(),
+    updatedate: new Date(),
+
+  };
+
+  // Serialize social profiles if present
   if (data.socialProfiles) {
-    data.socialProfiles = JSON.stringify(data.socialProfiles);
+    contact.socialProfiles = JSON.stringify(data.socialProfiles);
   }
-  return data;
+
+  // Connect to company if company_id exists
+  if (data.company_id) {
+    contact.company_details = {
+      connect: { id: Number(data.company_id) },
+    };
+  }
+  if (data.source) {
+    contact.source_details = {
+      connect: { id: Number(data.source) },
+    };
+  }
+  if (data.industry) {
+    contact.industry_details = {
+      connect: { id: Number(data.industry) },
+    };
+  }
+  if (data.state) {
+    contact.contact_State = {
+      connect: { id: Number(data.state) },
+    };
+  }
+  if (data.country) {
+    contact.contact_Country = {
+      connect: { id: Number(data.country) },
+    };
+  }
+  if (data.owner) {
+    contact.owner_details = {
+      connect: { id: Number(data.owner) },
+    };
+  }
+
+  return contact;
 };
 
 // Parse `socialProfiles` after retrieving it
@@ -20,15 +87,13 @@ const parseSocialProfiles = (contact) => {
 
 const createContact = async (data) => {
   try {
-    const serializedData = serializeSocialProfiles(data);
+    const serializedData = serializeContact(data);
 
     const contact = await prisma.crms_m_contact.create({
       data: {
         ...serializedData,
         is_active: serializedData.is_active || "Y",
         log_inst: serializedData.log_inst || 1,
-        state: Number(serializedData.state) || null,
-        country: Number(serializedData.country) || null,
         createdate: new Date(),
         updatedate: new Date(),
       },
@@ -129,13 +194,12 @@ const updateContact = async (id, data) => {
       ...data,
       updatedate: new Date(), // Add or update the date field
     };
-    const serializedData = serializeSocialProfiles(updatedData);
+    const serializedData = serializeContact(updatedData);
     const contact = await prisma.crms_m_contact.update({
       where: { id: parseInt(id) },
       data:  {
         ...serializedData,
-        state: Number(serializedData.state) || null,
-        country: Number(serializedData.country) || null,
+      
         updatedate: new Date(),
       },
       include: {
@@ -172,6 +236,18 @@ const deleteContact = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this contact because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error deleting contact: ${error.message}`, 500);
   }
 };

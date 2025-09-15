@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Create a new contact stage
@@ -58,24 +59,56 @@ const deleteContactStage = async (id) => {
             where: { id: parseInt(id) },
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this contact stage because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting contact stage: ${error.message}`, 500);
     }
 };
 
 // Get all contact stages
-const getAllContactStages = async (dataFilter) => {
+const getAllContactStages = async (is_active,search ,page , size,startDate,endDate) => {
     try {
+        page = page || 1;
+        size = size || 10;
+        const skip = (page - 1) * size;
+    
+        const filters = {};
+    
+        // Handle search
+        if (search) {
+          filters.OR = [{ name: { contains: search.toLowerCase() } }];
+        }
+        if(is_active){
+            filters.is_active =  { equals: is_active }
+          }
         const contactStages = await prisma.ContactStages.findMany({
-            where:dataFilter == "Active" ? {is_active : "Y" } : {},
-            orderBy: [
-                { updatedate: 'desc' },
-                { createdate: 'desc' },
-            ],
+          where: filters,
+          skip,
+          take: size,
+          orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
         });
-        return contactStages;
-    } catch (error) {
-        throw new CustomError('Error retrieving contact stages', 503);
-    }
+        const totalCount = await prisma.ContactStages.count( { where: filters});
+    
+        return  {
+          data: contactStages,
+          currentPage: page,
+          size,
+          totalPages: Math.ceil(totalCount / size),
+          totalCount: totalCount,
+        };
+      } catch (error) {
+        throw new CustomError("Error retrieving contact stages", 503);
+      }
 };
 
 module.exports = {

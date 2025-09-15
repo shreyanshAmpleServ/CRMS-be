@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new  invoice
@@ -195,6 +196,18 @@ const deleteInvoice = async (orderId) => {
     return result;
   } catch (error) {
     console.error("Failed to delete invoice and order items:", error);
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this sales invoice and associated items because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new Error("Failed to delete invoice and associated items");
   }
 };

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Create a new call type
@@ -97,6 +98,18 @@ const deleteAttachment = async (id) => {
             
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this file attachment because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting file attachment: ${error.message}`, 500);
     }
 };

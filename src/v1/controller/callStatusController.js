@@ -40,8 +40,8 @@ const deleteCallStatus = async (req, res, next) => {
 
 const getAllCallStatuses = async (req, res, next) => {
     try {
-        const {dataFilter} = req.query
-        const callStatuses = await callStatusService.getAllCallStatuses(dataFilter);
+        const {is_active, page , size ,search ,startDate,endDate  } = req.query;
+        const callStatuses = await callStatusService.getAllCallStatuses(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, callStatuses);
     } catch (error) {
         next(error);

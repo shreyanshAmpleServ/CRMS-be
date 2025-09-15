@@ -7,6 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator zod {
+  provider                         = "zod-prisma-types"
+  output                           = "./zod" // 
+  useDecimalJs                     = true
+  useNamespace                     = true
+  useMultipleFiles                 = true // default is false
+  writeBarrelFiles                 = false // default is true
+  createInputTypeSchemas           = false
+  createInputTypes                 = false
+  createOutputTypes                = false
+  createModelTypes                 = true // default is true
+  addInputTypeValidation           = false // default is true
+  addIncludeType                   = true // default is true
+  addSelectType                    = true // default is true
+  validateWhereUniqueInput         = true // default is true
+  createOptionalDefaultValuesTypes = false // default is false
+  createRelationValuesTypes        = false // default is false
+  createPartialTypes               = false // default is false
+  useDefaultValidators             = false // default is true
+  coerceDate                       = true // default is true
+  writeNullishInModelTypes         = true // default is false
+}
+
 model crms_d_role_permission {
   id                Int               @id(map: "PK__crms_d_r__3213E83F835C1EB7") @default(autoincrement())
   role_id           Int
@@ -18,9 +41,9 @@ model crms_d_role_permission {
   updatedate        DateTime?         @db.DateTime
   createdby         Int               @default(1, map: "DF__crms_d_ro__creat__276EDEB3")
   updatedby         Int?
-  crms_m_module     crms_m_module     @relation(fields: [module_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_module")
-  crms_m_permission crms_m_permission @relation(fields: [permission_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_permission")
-  crms_m_role       crms_m_role       @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_role")
+  crms_m_module     crms_m_module     @relation(fields: [module_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_module")
+  crms_m_permission crms_m_permission @relation(fields: [permission_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_permission")
+  crms_m_role       crms_m_role       @relation(fields: [role_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_role")
 }
 
 model crms_d_user_role {
@@ -33,8 +56,8 @@ model crms_d_user_role {
   updatedate  DateTime?   @db.DateTime
   createdby   Int         @default(1, map: "DF__crms_d_us__creat__2D27B809")
   updatedby   Int?
-  crms_m_role crms_m_role @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_user_role_role")
-  crms_m_user crms_m_user @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_user_role_user")
+  crms_m_role crms_m_role @relation(fields: [role_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_user_role_role")
+  crms_m_user crms_m_user @relation(fields: [user_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_user_role_user")
 }
 
 model crms_m_contact {
@@ -78,13 +101,13 @@ model crms_m_contact {
   camp_contact          CampaignContacts[]
   case_contact          crms_d_cases[]
   dealContacts          DealContacts[]
-  company_details       Company?            @relation("CompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction)
-  contact_Country       Country?            @relation(fields: [country], references: [id], onUpdate: NoAction)
-  deal_details          Deal?               @relation("ContactDeal", fields: [deal_id], references: [id], onUpdate: NoAction)
-  industry_details      Industries?         @relation("ContactIndustry", fields: [industry], references: [id], onUpdate: NoAction)
-  owner_details         crms_m_user?        @relation("ContactOwner", fields: [owner], references: [id], onUpdate: NoAction)
-  source_details        Sources?            @relation("ContactSource", fields: [source], references: [id], onUpdate: NoAction)
-  contact_State         crms_m_states?      @relation(fields: [state], references: [id], onUpdate: NoAction)
+  company_details       Company?            @relation("CompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  contact_Country       Country?            @relation(fields: [country], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  deal_details          Deal?               @relation("ContactDeal", fields: [deal_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  industry_details      Industries?         @relation("ContactIndustry", fields: [industry], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  owner_details         crms_m_user?        @relation("ContactOwner", fields: [owner], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  source_details        Sources?            @relation("ContactSource", fields: [source], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  contact_State         crms_m_states?      @relation(fields: [state], references: [id], onUpdate: NoAction, onDelete: SetNull)
 }
 
 model crms_m_module {
@@ -185,8 +208,8 @@ model Deal {
   DealContacts      DealContacts[]
   DealHistory       DealHistory[]
   deal_details      crms_m_contact[]    @relation("ContactDeal")
-  pipeline          Pipeline?           @relation(fields: [pipelineId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  deals             Stage?              @relation(fields: [stageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pipeline          Pipeline?           @relation(fields: [pipelineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deals             Stage?              @relation(fields: [stageId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@map("crms_m_deals")
 }
@@ -354,14 +377,15 @@ model crms_leads {
   log_inst            Int?
   company_icon        String?           @db.NVarChar(300)
   company_id          Int
+  jobTitle            String?           @db.VarChar(100)
   crms_calls          crms_calls[]
-  lead_Country        Country?          @relation(fields: [country], references: [id], onUpdate: NoAction)
-  crms_m_industries   Industries?       @relation(fields: [industry], references: [id], onUpdate: NoAction)
-  crms_m_sources      Sources?          @relation(fields: [lead_source], references: [id], onUpdate: NoAction)
-  crms_m_lost_reasons LostReasons?      @relation(fields: [lead_status], references: [id], onUpdate: NoAction)
-  lead_State          crms_m_states?    @relation(fields: [state], references: [id], onUpdate: NoAction)
-  lead_company        Company           @relation("LeadCompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, map: "FK__crms_lead__company_id")
-  crms_m_user         crms_m_user       @relation(fields: [lead_owner], references: [id], onUpdate: NoAction, map: "FK__crms_lead__lead___40058253")
+  lead_Country        Country?          @relation(fields: [country], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_industries   Industries?       @relation(fields: [industry], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_sources      Sources?          @relation(fields: [lead_source], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_lost_reasons LostReasons?      @relation(fields: [lead_status], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  lead_State          crms_m_states?    @relation(fields: [state], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  lead_company        Company           @relation("LeadCompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__crms_lead__company_id")
+  crms_m_user         crms_m_user       @relation(fields: [lead_owner], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__crms_lead__lead___40058253")
   campaigns           crms_d_campaign[] @relation("CampaignLead")
 }
 
@@ -876,7 +900,7 @@ model crms_m_vendor {
   phone                   String?                   @db.NVarChar(20)
   email                   String?                   @db.NVarChar(100)
   is_active               String                    @default("Y", map: "DF__crms_m_ve__is_ac__5A846E65") @db.Char(1)
-  account_owner           Int
+  account_owner           Int?
   website                 String                    @db.NVarChar(200)
   glaccount               String                    @db.NVarChar(50)
   category                String                    @db.NVarChar(100)
@@ -901,7 +925,7 @@ model crms_m_vendor {
   vendor                  crms_m_products[]
   country                 Country?                  @relation(fields: [billing_country], references: [id], onUpdate: NoAction)
   state                   crms_m_states?            @relation(fields: [billing_state], references: [id], onUpdate: NoAction)
-  crms_m_user             crms_m_user               @relation(fields: [account_owner], references: [id], onUpdate: NoAction, map: "FK__crms_m_ve__accou__5B78929E")
+  crms_m_user             crms_m_user?              @relation(fields: [account_owner], references: [id], onUpdate: NoAction, onDelete: SetNull, map: "FK__crms_m_ve__accou__5B78929E")
 }
 
 model crms_tags {
@@ -1110,48 +1134,56 @@ model crms_d_quotation_items {
   total_amount           Decimal?          @db.Decimal(19, 5)
   parent_id              Int
   disc_amount            Decimal?          @db.Decimal(19, 5)
+  is_optional            String?           @default("N", map: "DF_crms_d_quotation_items_is_optional") @db.Char(1)
   quotation_item_product crms_m_products   @relation(fields: [item_id], references: [id], onUpdate: NoAction)
   quotation_items        crms_d_quotations @relation(fields: [parent_id], references: [id], onUpdate: NoAction)
   quotation_item_tax     crms_m_tax_setup? @relation(fields: [tax_id], references: [id], onUpdate: NoAction)
 }
 
 model crms_d_quotations {
-  id                 Int                      @id(map: "PK_quotations") @default(autoincrement())
-  vendor_id          Int
-  quotation_code     String?                  @db.VarChar(100)
-  address            String?
-  cust_ref_no        String?                  @db.NVarChar(200)
-  cont_person        String?                  @db.VarChar(100)
-  currency           Int?
-  due_date           DateTime?                @db.Date
-  total_bef_tax      Decimal?                 @db.Decimal(20, 5)
-  disc_prcnt         Decimal?                 @db.Decimal(20, 5)
-  tax_total          Decimal?                 @db.Decimal(20, 5)
-  doc_total          Decimal?                 @db.Decimal(20, 5)
-  source_doc_id      String?                  @db.NVarChar(50)
-  source_doc_type    String?                  @db.NVarChar(80)
-  rounding           String?                  @default("N", map: "DF_quotation_rounding") @db.Char(1)
-  remarks            String?                  @db.NVarChar(800)
-  shipto             String?                  @db.NVarChar(200)
-  billto             String?                  @db.NVarChar(200)
-  sales_type         Int?
-  apr_status         String                   @default("Y", map: "DF__quotation__apr_stat__42CCE065") @db.Char(1)
-  apr_by             String?                  @db.VarChar(100)
-  apr_date           DateTime?                @db.Date
-  apr_remark         String?                  @db.VarChar(500)
-  auto_approved      String?                  @default("N", map: "DF__quotation__auto_app__44B528D7") @db.Char(1)
-  status             String?                  @db.NVarChar(10)
-  createdby          Int?
-  updatedby          Int?
-  createdate         DateTime                 @default(now(), map: "DF_quotation_createdate") @db.Date
-  updatedate         DateTime                 @db.Date
-  total_amount       Decimal?                 @db.Decimal(20, 5)
-  rounding_amount    Decimal?                 @db.Decimal(20, 5)
-  attachment1        String?
-  attachment2        String?
-  quotation_items    crms_d_quotation_items[]
-  quotation_currency Currency?                @relation(fields: [currency], references: [id], onUpdate: NoAction)
-  quotation_vendor   crms_m_vendor            @relation(fields: [vendor_id], references: [id], onUpdate: NoAction)
+  id                   Int                      @id(map: "PK_quotations") @default(autoincrement())
+  vendor_id            Int
+  template_master_id   Int?
+  quotation_code       String?                  @db.VarChar(100)
+  address              String?
+  cust_ref_no          String?                  @db.NVarChar(200)
+  cont_person          String?                  @db.VarChar(100)
+  confirmation_email   String?                  @db.NVarChar(100)
+  currency             Int?
+  due_date             DateTime?                @db.Date
+  total_bef_tax        Decimal?                 @db.Decimal(20, 5)
+  disc_prcnt           Decimal?                 @db.Decimal(20, 5)
+  tax_total            Decimal?                 @db.Decimal(20, 5)
+  doc_total            Decimal?                 @db.Decimal(20, 5)
+  source_doc_id        String?                  @db.NVarChar(50)
+  source_doc_type      String?                  @db.NVarChar(80)
+  rounding             String?                  @default("N", map: "DF_quotation_rounding") @db.Char(1)
+  remarks              String?                  @db.NVarChar(800)
+  shipto               String?                  @db.NVarChar(200)
+  billto               String?                  @db.NVarChar(200)
+  sales_type           Int?
+  apr_status           String                   @default("Y", map: "DF__quotation__apr_stat__42CCE065") @db.Char(1)
+  apr_by               String?                  @db.VarChar(100)
+  apr_date             DateTime?                @db.Date
+  apr_remark           String?                  @db.VarChar(500)
+  auto_approved        String?                  @default("N", map: "DF__quotation__auto_app__44B528D7") @db.Char(1)
+  status               String?                  @db.NVarChar(10)
+  e_signature          String                   @default("N", map: "DF_crms_d_quotations_e_signature") @db.Char(1)
+  payment_confirmation String                   @default("N", map: "DF_crms_d_quotations_payment_confirmation") @db.Char(1)
+  createdby            Int?
+  updatedby            Int?
+  createdate           DateTime                 @default(now(), map: "DF_quotation_createdate") @db.Date
+  updatedate           DateTime                 @db.Date
+  total_amount         Decimal?                 @db.Decimal(20, 5)
+  rounding_amount      Decimal?                 @db.Decimal(20, 5)
+  attachment1          String?
+  attachment2          String?
+  terms                String?                  @db.NText
+  optional_items       String?                  @db.NText
+  other_items          String?                  @db.NText
+  quotation_items      crms_d_quotation_items[]
+  quotation_currency   Currency?                @relation(fields: [currency], references: [id], onUpdate: NoAction)
+  quotation_vendor     crms_m_vendor            @relation(fields: [vendor_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model crms_d_purchase_order_items {
@@ -1600,4 +1632,101 @@ model crms_menus {
   order_by       Int?
   parent_menu    crms_menus?  @relation("menuDetails", fields: [parent_menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates   crms_menus[] @relation("menuDetails")
+}
+
+model crms_template_category {
+  id                   Int                   @id(map: "PK__crms_tem__3213E83F515ACA28") @default(autoincrement())
+  template_master_id   Int?
+  category_name        String?               @db.NVarChar(500)
+  type                 String?               @db.VarChar(50)
+  is_active            String                @default("Y", map: "DF__crms_temp__is_ac__3EE740E8") @db.Char(1)
+  createdate           DateTime              @db.DateTime
+  updatedate           DateTime?             @db.DateTime
+  createdby            Int
+  updatedby            Int?
+  log_inst             Int?
+  crms_template_master crms_template_master? @relation(fields: [template_master_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__crms_temp__templ__3DF31CAF")
+  crms_template_items  crms_template_items[]
+}
+
+model crms_template_items {
+  id                     Int                     @id(map: "PK__crms_tem__3213E83FDB3D371F") @default(autoincrement())
+  parent_id              Int?
+  item_id                Int?
+  description            String?                 @db.NText
+  qty                    Decimal?                @db.Decimal(18, 0)
+  is_active              String                  @default("Y", map: "DF__crms_temp__is_ac__42B7D1CC") @db.Char(1)
+  createdate             DateTime                @db.DateTime
+  updatedate             DateTime?               @db.DateTime
+  createdby              Int
+  updatedby              Int?
+  log_inst               Int?
+  crms_template_category crms_template_category? @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__crms_temp__paren__41C3AD93")
+}
+
+model crms_template_master {
+  id                     Int                      @id(map: "PK__crms_tem__3213E83F953A032D") @default(autoincrement())
+  template_name          String?                  @db.NVarChar(500)
+  terms                  String?                  @db.NText
+  is_active              String                   @default("Y", map: "DF__crms_temp__is_ac__3B16B004") @db.Char(1)
+  createdate             DateTime                 @db.DateTime
+  updatedate             DateTime?                @db.DateTime
+  createdby              Int
+  updatedby              Int?
+  log_inst               Int?
+  crms_template_category crms_template_category[]
+}
+
+model crms_users_email_auth {
+  id              Int       @id(map: "PK_crms_users_email_auth")
+  user_id         Int?
+  email_id        String?   @db.VarChar(50)
+  access_token    String?   @db.VarChar(200)
+  refresh_token   String?   @db.VarChar(200)
+  email_provider  String?   @db.VarChar(200)
+  expire_datetime DateTime? @db.DateTime
+  other_info      String?   @db.NText
+}
+
+model crms_mail_message {
+  id          Int       @id(map: "PK__crms_mai__3213E83FE2A00245") @default(autoincrement())
+  thread_id   String?   @db.NVarChar(100)
+  model       String    @db.NVarChar(100)
+  record_id   Int
+  subject     String?   @db.VarChar(500)
+  body        String?   @db.NText
+  type        String    @db.NVarChar(20)
+  sender_id   Int?
+  recipient   String?   @db.NVarChar(255)
+  timestamp   DateTime? @default(now(), map: "DF__crms_mail__times__57B61C0E") @db.DateTime
+  is_incoming Boolean?  @default(false, map: "DF__crms_mail__is_in__58AA4047")
+  is_read     Boolean?  @default(false, map: "DF__crms_mail__is_re__599E6480")
+  message_id  String?   @db.NVarChar(255)
+  reply_to_id Int?
+}
+
+model crms_audit_logs {
+  id              Int       @id(map: "PK_crms_audit_logs") @default(autoincrement())
+  table_name      String?   @db.VarChar(100)
+  record_id       Int?
+  field_name      String?   @db.VarChar(200)
+  old_value       String?   @db.NText
+  new_value       String?   @db.NText
+  obj_name        String?   @db.VarChar(200)
+  obj_id          Int?
+  action          String?   @db.VarChar(100)
+  updated_by      Int?
+  updated_by_name String?   @db.VarChar(100)
+  updated_at      DateTime? @db.DateTime
+}
+
+model crms_comments {
+  id         Int       @id(map: "PK_crms_comments") @default(autoincrement())
+  parent_id  Int?
+  comments   String?   @db.NText
+  user_name  String?   @db.VarChar(100)
+  user_id    Int?
+  obj_name   String?   @db.VarChar(100)
+  obj_id     Int?
+  created_at DateTime? @db.DateTime
 }

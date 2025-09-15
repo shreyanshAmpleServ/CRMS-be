@@ -27,15 +27,15 @@ const sanitizeName = (str) => str.replace(/\s+/g, '_'); // Replace spaces with u
 // testDirectAuth();
 const uploadToBackblaze = async (fileBuffer, originalName, mimeType,folder="general",name) => {
   await b2.authorize();
+
   // console.log("file name : ",originalName,mimeType)
   const bucketName = process.env.BACKBLAZE_B2_BUCKET_NAME;
   const { data: buckets } = await b2.listBuckets();
   const bucket = buckets.buckets.find(b => b.bucketName === bucketName);
   if (!bucket) throw new Error('Bucket not found');
-  
 const uniqueId = Date.now();
   const ext = path.extname(originalName);
-  const fileName = `${folder.toLowerCase()}/${sanitizeName(name).toLowerCase()}/${uniqueId}_${originalName}`;
+  const fileName = `${folder.toLowerCase()}/${sanitizeName(name).toLowerCase()}_${uniqueId}_${originalName}`;
   // const fileName = `${folder}/${name}/${uuidv4()}${ext}`;
   
   const { data: uploadData } = await b2.getUploadUrl({ bucketId: bucket.bucketId });
@@ -55,40 +55,56 @@ const uniqueId = Date.now();
 
 
 const deleteFromBackblaze = async (fileUrl) => {
-    try {
-      // 1. Extract file name from URL
-      const url = new URL(fileUrl);
-      const pathParts = url.pathname.split('/');
-      const fileName = decodeURIComponent(pathParts.slice(1).join('/')); // remove leading slash
-  
-      // 2. Authorize
-      await b2.authorize();
-  
-      // 3. Get bucketId
-      const { data: buckets } = await b2.listBuckets();
-      const bucket = buckets.buckets.find(b => b.bucketName === process.env.BACKBLAZE_B2_BUCKET_NAME);
-      if (!bucket) throw new Error('Bucket not found');
-  
-      // 4. Get fileId
+  try {
+    // 1. Extract file name from URL
+    const url = new URL(fileUrl);
+    const fileName = decodeURIComponent(url.pathname.replace(/^\/+/, '')); // remove leading slash
+
+    // 2. Authorize with B2
+    await b2.authorize();
+
+    // 3. Get bucket
+    const { data: buckets } = await b2.listBuckets();
+    const bucket = buckets.buckets.find(
+      (b) => b.bucketName === process.env.BACKBLAZE_B2_BUCKET_NAME
+    );
+    if (!bucket) throw new Error('Bucket not found');
+
+    // 4. Search for file version with matching name
+    let matchedFile = null;
+    let startFileName = undefined;
+
+    do {
       const { data: fileVersions } = await b2.listFileVersions({
         bucketId: bucket.bucketId,
         prefix: fileName,
-        // maxFileCount: 100
+        maxFileCount: 1000,
+        startFileName
       });
-  
-      const file = fileVersions.files.find(f => f.fileName === fileName);
-      if (!file) throw new Error('File not found in bucket');
-  
-      // 5. Delete the file
-      await b2.deleteFileVersion({
-        fileName: file.fileName,
-        fileId: file.fileId
-      });
-  
-      return true;
-    } catch (err) {
-      console.error('❌ Failed to delete from B2:', err.message);
-      throw err;
+
+      matchedFile = fileVersions.files.find((f) => f.fileName === fileName);
+
+      if (matchedFile) break;
+
+      startFileName = fileVersions.nextFileName;
+    } while (startFileName);
+
+    if (!matchedFile) {
+      console.error(`❌ File not found in B2: ${fileName}`);
+      throw new Error(`File not found in bucket`);
     }
-  };
+
+    // 5. Delete the file
+    await b2.deleteFileVersion({
+      fileName: matchedFile.fileName,
+      fileId: matchedFile.fileId
+    });
+
+    return true;
+  } catch (err) {
+    console.error('❌ Failed to delete from B2:', err.message);
+    throw err;
+  }
+};
+
 module.exports = {uploadToBackblaze , deleteFromBackblaze};

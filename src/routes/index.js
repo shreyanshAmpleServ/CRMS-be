@@ -50,6 +50,10 @@ const projectReportRoutes = require("../v1/routes/projectReportRoutes")
 const TaskReportRoutes = require("../v1/routes/TaskReportRoutes")
 const menuRoute = require("../v1/routes/menuRoute")
 const dashboardLeadRoutes = require("../v1/routes/dashboardLeadRoutes")
+const gmailCallbackRoute = require("./gmailRoute");
+const gmailAccessRoute = require("../v1/routes/gmaiAccess");
+const quoteTemplateRoute = require("../v1/routes/quoteTemplateRoute");
+
 
 const router = express.Router();
 
@@ -106,6 +110,10 @@ router.use('/v1',projectReportRoutes);
 router.use('/v1',TaskReportRoutes);
 router.use('/v1',menuRoute);
 router.use('/v1',dashboardLeadRoutes);
+router.use("/v1", gmailCallbackRoute);
+router.use("/v1", gmailAccessRoute);
+router.use("/v1", quoteTemplateRoute);
+
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

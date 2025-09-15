@@ -3,19 +3,47 @@ const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
 
 const sanitizeCaseData = (data) => {
-  return {
-        ...data,
-        product_id: Number(data?.product_id) || null,
-        case_reason: Number(data?.case_reason) || null,
-        contact_id: Number(data?.contact_id) || null,
-        deal_id: Number(data?.deal_id) || null,
-        case_owner_id: data.case_owner_id ? Number(data.case_owner_id) : null,
-        account_id: Number(data?.account_id) || null,
-        reported_by: Number(data?.reported_by) || null,
-        is_active: data.is_active || "Y",
-        log_inst: data.log_inst || 1,
-        description: data.description ? String(data.description).trim() : "",
-  };
+  const {case_owner_id,case_reason,contact_id,deal_id,product_id,...datas} = data
+ const cases =  {
+        ...datas,
+        // product_id: Number(datas?.product_id) || null,
+        // case_reason: Number(datas?.case_reason) || null,
+        // contact_id: Number(datas?.contact_id) || null,
+        // deal_id: Number(datas?.deal_id) || null,
+        // case_owner_id: datas.case_owner_id ? Number(datas.case_owner_id) : null,
+        account_id: Number(datas?.account_id) || null,
+        reported_by: Number(datas?.reported_by) || null,
+        is_active: datas.is_active || "Y",
+        log_inst: datas.log_inst || 1,
+        description: datas.description ? String(datas.description).trim() : "",
+      };
+      if (case_owner_id) {
+        cases.cases_user_owner = {
+          connect: { id: Number(case_owner_id) },
+        };
+      }
+
+      if (case_reason) {
+        cases.case_reasons = {
+          connect: { id: Number(case_reason) },
+        };
+      }
+      if (contact_id) {
+        cases.case_contact = {
+          connect: { id: Number(contact_id) },
+        };
+      }
+      if (deal_id) {
+        cases.case_deal = {
+          connect: { id: Number(deal_id) },
+        };
+      }
+      if (product_id) {
+        cases.case_product = {
+          connect: { id: Number(product_id) },
+        };
+      }
+      return cases
 };
 
 const createCases = async (req, res, next) => {

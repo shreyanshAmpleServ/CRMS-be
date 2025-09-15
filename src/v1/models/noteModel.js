@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Create a new note
@@ -59,6 +60,18 @@ const deleteNote = async (id) => {
             where: { id: parseInt(id) },
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this note because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting note: ${error.message}`, 500);
     }
 };

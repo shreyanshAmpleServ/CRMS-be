@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Create a new source
@@ -47,6 +48,18 @@ const updateSource = async (id, data) => {
     });
     return updatedSource;
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this source because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error updating source: ${error.message}`, 500);
   }
 };
@@ -63,18 +76,50 @@ const deleteSource = async (id) => {
 };
 
 // Get all sources
-const getAllSources = async (dataFilter) => {
+const getAllSources = async (search ,page , size,startDate,endDate,is_active) => {
   try {
+    page = page || 1;
+    size = size || 10;
+    const skip = (page - 1) * size;
+
+    const filters = {};
+
+    // Handle search
+    if (search) {
+      filters.OR = [{ name: { contains: search.toLowerCase() } }];
+    }
+    if(is_active == "Y"){
+      filters.is_active =  "Y"
+    }
+    // Handle date filtering
+    // if (startDate && endDate) {
+    //   const start = new Date(startDate);
+    //   const end = new Date(endDate);
+
+    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+    //     filters.createdate = {
+    //       gte: start,
+    //       lte: end,
+    //     };
+    //   }
+    // }
     const sources = await prisma.Sources.findMany({
-      where: dataFilter == "Active" ? {is_active : "Y" }  : {},
-      orderBy: [
-        { updatedate: 'desc' },
-        { createdate: 'desc' },
-      ],
+      where: filters,
+      skip,
+      take: size,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    return sources;
+    const totalCount = await prisma.Sources.count( { where: filters});
+
+    return  {
+      data: sources,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-    throw new CustomError('Error retrieving sources', 503);
+    throw new CustomError("Error retrieving sources", 503);
   }
 };
 

@@ -66,7 +66,7 @@ const updateUser = async (req, res, next) => {
         if (req.file) {
           userData.profile_img = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "users",req.body.full_name) || null;
         }
-
+    
     const user = await userService.updateUser(req.params.id, userData);
     res.status(200).success('User updated successfully', user);
     if (req.file) {
@@ -86,9 +86,9 @@ const deleteUser = async (req, res, next) => {
       throw new CustomError("You cannot delete your own account.", 400);
     }
     const existingData = await findUserById(req.params.id);
-      if (existingData.profile_img) {
-        await deleteFromBackblaze(existingData.profile_img); // Delete the old logo
-      }
+    if (existingData.profile_img) {
+      await deleteFromBackblaze(existingData.profile_img); // Delete the old logo
+    }
     await userService.deleteUser(req.params.id);
     res.status(200).success('User deleted successfully', null);
   } catch (error) {

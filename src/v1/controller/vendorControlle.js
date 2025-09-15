@@ -72,9 +72,9 @@ const deleteVendor = async (req, res, next) => {
   try {
     
     // Prevent a user from deleting themselves
-    if (parseInt(req.params.id) === req.user.id) {
-      throw new CustomError("You cannot delete your own account.", 400);
-    }
+    // if (parseInt(req.params.id) === req.user.id) {
+    //   throw new CustomError("You cannot delete your own account.", 400);
+    // }
     const existingData = await vendorModel.findVendorById(req.params.id);
     await vendorService.deleteVendor(req.params.id);
     res.status(200).success('User deleted successfully', null);

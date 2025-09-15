@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Create a new call purpose
@@ -58,25 +59,57 @@ const deleteCallPurpose = async (id) => {
             where: { id: parseInt(id) },
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this call purpose because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting call purpose: ${error.message}`, 500);
     }
 };
 
 // Get all call purposes
-const getAllCallPurposes = async (dataFilter) => {
+const getAllCallPurposes = async (is_active,search ,page , size,startDate,endDate) => {
     try {
-        const callPurpose = await prisma.crms_m_callpurpose.findMany({
-            where:dataFilter== "Active" ? {is_active : "Y" } : {},
-            orderBy: [
-                { updatedate: 'desc' },
-                { createdate: 'desc' },
-            ],
-        });
-        return callPurpose;
+      page = page || 1;
+      size = size || 10;
+      const skip = (page - 1) * size;
+  
+      const filters = {};
+  
+      // Handle search
+      if (search) {
+        filters.OR = [{ name: { contains: search.toLowerCase() } }];
+      }
+      if(is_active){
+        filters.is_active =  { equals: is_active }
+      }
+      const callPurpose = await prisma.crms_m_callpurpose.findMany({
+        where: filters,
+        skip,
+        take: size,
+        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      });
+      const totalCount = await prisma.crms_m_callpurpose.count( { where: filters});
+  
+      return  {
+        data: callPurpose,
+        currentPage: page,
+        size,
+        totalPages: Math.ceil(totalCount / size),
+        totalCount: totalCount,
+      };
     } catch (error) {
-        throw new CustomError('Error retrieving call purposes', 503);
+      throw new CustomError("Error retrieving call purposes", 503);
     }
-};
+  };
 
 module.exports = {
     createCallPurpose,

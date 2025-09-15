@@ -40,8 +40,8 @@ const deleteContactStage = async (req, res, next) => {
 
 const getAllContactStages = async (req, res, next) => {
     try {
-        const {dataFilter } = req.query
-        const contactStages = await contactStageService.getAllContactStages(dataFilter);
+        const { page , size ,search ,startDate,endDate,is_active  } = req.query;
+        const contactStages = await contactStageService.getAllContactStages(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, contactStages);
     } catch (error) {
         next(error);

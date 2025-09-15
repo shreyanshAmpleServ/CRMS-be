@@ -37,11 +37,10 @@ const deleteProductCategory = async (req, res, next) => {
         next(error);
     }
 };
-
 const getAllProductCategory = async (req, res, next) => {
     try {
-        const {search,dataFilter} = req.query
-        const categories = await productCategoryService.getAllProductCategory(search,dataFilter);
+        const {is_active, page , size ,search ,startDate,endDate  } = req.query;
+        const categories = await productCategoryService.getAllProductCategory(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, categories);
     } catch (error) {
         next(error);

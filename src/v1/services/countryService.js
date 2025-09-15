@@ -16,8 +16,8 @@ const deleteCountryService = async (id) => {
   return await countryModel.deleteCountry(id);
 };
 
-const getAllCountriesService = async () => {
-  return await countryModel.getAllCountries();
+const getAllCountriesService = async (is_active ,search ,page , size,startDate,endDate) => {
+  return await countryModel.getAllCountries(is_active ,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

@@ -16,8 +16,8 @@ const deleteCallType = async (id) => {
     return await callTypeModel.deleteCallType(id);
 };
 
-const getAllCallTypes = async (dataFilter) => {
-    return await callTypeModel.getAllCallTypes(dataFilter);
+const getAllCallTypes = async (is_active,search ,page , size,startDate,endDate) => {
+    return await callTypeModel.getAllCallTypes(is_active,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

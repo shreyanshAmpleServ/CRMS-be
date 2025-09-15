@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Serialize `permissions` before saving it
@@ -181,7 +182,7 @@ const findContactById = async (id) => {
     });
     return parsePermissions(contact);
   } catch (error) {
-    throw new CustomError("Error finding contact by ID", 503);
+    throw new CustomError("Error finding permission by ID", 503);
   }
 };
 
@@ -217,8 +218,8 @@ const updateContact = async (id, data) => {
     });
     return parsePermissions(contact);
   } catch (error) {
-    console.log("Update Contact Error : ", error);
-    throw new CustomError(`Error updating contact: ${error.message}`, 500);
+    console.log("Update permission Error : ", error);
+    throw new CustomError(`Error updating permission: ${error.message}`, 500);
   }
 };
 
@@ -233,7 +234,19 @@ const deleteContact = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting contact: ${error.message}`, 500);
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this role permission because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
+    throw new CustomError(`Error deleting Permission: ${error.message}`, 500);
   }
 };
 

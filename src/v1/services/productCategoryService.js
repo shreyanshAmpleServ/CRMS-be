@@ -16,8 +16,8 @@ const deleteProductCategory = async (id) => {
     return await productCategoryModel.deleteProductCategory(id);
 };
 
-const getAllProductCategory = async (search,dataFilter) => {
-    return await productCategoryModel.getAllProductCategory(search,dataFilter);
+const getAllProductCategory = async (is_active,search ,page , size,startDate,endDate) => {
+    return await productCategoryModel.getAllProductCategory(is_active,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

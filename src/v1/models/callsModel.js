@@ -3,6 +3,7 @@ const CustomError = require('../../utils/CustomError');
 const prisma = new PrismaClient();
 
 const { sendEmailNotification, scheduleCallReminder } = require('../../utils/sendMail');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 
 const combineDateAndTime = (date, time) => {
     if(date && time){
@@ -300,6 +301,18 @@ const deleteCalls = async (id) => {
             where: { id: parseInt(id) },
         });
     } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === "P2003") {
+              // Foreign key constraint failed
+              throw new Error(
+                "Cannot delete this call because related records exist. Please remove them first."
+              );
+            }
+            if (error.code === "P2025") {
+              // Record not found
+              throw new Error("Record not found");
+            }
+          }
         throw new CustomError(`Error deleting call : ${error.message}`, 500);
     }
 };

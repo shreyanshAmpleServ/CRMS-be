@@ -5,8 +5,8 @@ const userModel = require("../models/userModel"); // Import the user model
 const redis = require("redis");
 const CustomError = require("../../utils/CustomError");
 const { use } = require("../routes/contactRoutes");
-const redisClient = redis.createClient({ url: process.env.REDIS_URL });
-redisClient.connect();
+// const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+// redisClient.connect();
 require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
 const BCRYPT_COST = 8;
@@ -46,7 +46,7 @@ const registerUser = async (email, password, fullName = null) => {
 const loginUser = async (email, password) => {
   try {
     // Check Redis cache first
-    const cachedUser = await redisClient.get(email);
+    // const cachedUser = await redisClient.get(email);
     let user;
     // if (cachedUser) {
     //   console.log("Catched Data ;")         // Fetch cached user

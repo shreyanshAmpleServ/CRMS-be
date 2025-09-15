@@ -16,8 +16,8 @@ const deleteCallResult = async (id) => {
     return await callResultsModel.deleteCallResult(id);
 };
 
-const getAllCallResults = async (dataFilter) => {
-    return await callResultsModel.getAllCallResults(dataFilter);
+const getAllCallResults = async (is_active,search ,page , size,startDate,endDate) => {
+    return await callResultsModel.getAllCallResults(is_active,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

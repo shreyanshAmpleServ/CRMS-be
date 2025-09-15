@@ -21,11 +21,12 @@ app.use(
   cors({
     origin: [
       "https://crms.dcctz.com",
-      "http://192.168.29.127:3000",
+      "https://crms_live.dcctz.com",
       "http://192.168.29.127:3000",
       "http://localhost:3000",
-      "http://192.168.29.55:3000",
       "http://10.160.5.101:3000",
+      "http://localhost:3002",
+      "http://localhost:3003",
     ], // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent
   })

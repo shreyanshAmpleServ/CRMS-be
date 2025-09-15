@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
+const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
 const prisma = new PrismaClient();
 
 // Utility Method: Formats pipeline data consistently
@@ -222,6 +223,18 @@ const deletePipeline = async (id) => {
     await prisma.pipeline.delete({ where: { id: parseInt(id) } });
   } catch (error) {
     console.log(error)
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this pipeline because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error deleting pipeline: ${error.message}`, 500);
   }
 };

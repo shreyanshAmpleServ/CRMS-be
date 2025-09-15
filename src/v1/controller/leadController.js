@@ -34,6 +34,7 @@ const sanitizeLeadData = (req, data, imageUrl) => {
     linked_in_ac: data.linked_in_ac ? String(data.linked_in_ac).trim() : null,
     whatsapp_ac: data.whatsapp_ac ? String(data.whatsapp_ac).trim() : null,
     instagram_ac: data.instagram_ac ? String(data.instagram_ac).trim() : null,
+    jobTitle: data.jobTitle ? String(data.jobTitle).trim() : null,
     street: data.street ? String(data.street).trim() : null,
     city: data.city ? String(data.city).trim() : null,
     state: data.state ? String(data.state).trim() : null,
@@ -49,6 +50,7 @@ const sanitizeLeadData = (req, data, imageUrl) => {
 
     // Meta data
     is_active: data.is_active ? String(data.is_active).trim() : 'Y',
+    is_contact : data.is_contact === "Y" ? true : false
   };
 };
 

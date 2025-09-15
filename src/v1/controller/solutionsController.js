@@ -3,13 +3,25 @@ const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
 
 const sanitizeSolutionData = (data) => {
-  return {
-        ...data,
-        product_id: Number(data?.product_id) || null,
-        solution_owner: data.solution_owner ? Number(data.solution_owner) : null,
-        is_active: data.is_active || "Y",
-        log_inst: data.log_inst || 1,
+  const {product_id,solution_owner,solution_owner_name,...datas} = data
+  const solution=  {
+        ...datas,
+        // product_id: Number(datas?.product_id) || null,
+        // solution_owner: datas.solution_owner ? Number(datas.solution_owner) : null,
+        is_active: datas.is_active || "Y",
+        log_inst: datas.log_inst || 1,
   };
+  if (solution_owner) {
+    solution.solution_user_owner = {
+      connect: { id: Number(solution_owner) },
+    };
+  }
+  if (product_id) {
+    solution.solution_product = {
+      connect: { id: Number(product_id) },
+    };
+  }
+  return solution
 };
 
 const createSolutions = async (req, res, next) => {

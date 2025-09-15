@@ -16,8 +16,8 @@ const deleteSource = async (id) => {
   return await sourceModel.deleteSource(id);
 };
 
-const getAllSources = async (dataFilter) => {
-  return await sourceModel.getAllSources(dataFilter);
+const getAllSources = async (search ,page , size,startDate,endDate,is_active) => {
+  return await sourceModel.getAllSources(search ,page , size,startDate,endDate,is_active);
 };
 
 module.exports = {

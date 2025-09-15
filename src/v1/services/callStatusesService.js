@@ -16,8 +16,8 @@ const deleteCallStatus = async (id) => {
     return await callStatusesModel.deleteCallStatus(id);
 };
 
-const getAllCallStatuses = async (dataFilter) => {
-    return await callStatusesModel.getAllCallStatuses(dataFilter);
+const getAllCallStatuses = async (is_active,search ,page , size,startDate,endDate) => {
+    return await callStatusesModel.getAllCallStatuses(is_active,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

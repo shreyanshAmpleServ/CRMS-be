@@ -16,8 +16,8 @@ const deleteIndustry = async (id) => {
     return await industryModel.deleteIndustry(id);
 };
 
-const getAllIndustries = async (dataFilter) => {
-    return await industryModel.getAllIndustries(dataFilter);
+const getAllIndustries = async (is_active,search ,page , size,startDate,endDate) => {
+    return await industryModel.getAllIndustries(is_active,search ,page , size,startDate,endDate);
 };
 
 module.exports = {

@@ -16,8 +16,8 @@ const deleteRole = async (id) => {
   return await roleModel.deleteRole(id);
 };
 
-const getAllRoles = async () => {
-  return await roleModel.getAllRoles();
+const getAllRoles = async (is_active,search, page, size, startDate, endDate) => {
+  return await roleModel.getAllRoles(is_active,search, page, size, startDate, endDate);
 };
 
 module.exports = {

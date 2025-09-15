@@ -40,7 +40,8 @@ const deleteRole = async (req, res, next) => {
 
 const getAllRoles = async (req, res, next) => {
   try {
-    const roles = await roleService.getAllRoles();
+    const { is_active ,page , size ,search ,startDate,endDate  } = req.query;
+    const roles = await roleService.getAllRoles(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
     res.status(200).success(null, roles);
   } catch (error) {
     next(error);

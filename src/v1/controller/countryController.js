@@ -40,7 +40,8 @@ const deleteCountry = async (req, res, next) => {
 
 const getAllCountries = async (req, res, next) => {
   try {
-    const countries = await countryService.getAllCountriesService();
+    const { is_active ,page , size ,search ,startDate,endDate  } = req.query;
+    const countries = await countryService.getAllCountriesService(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
     res.status(200).success(null, countries);
   } catch (error) {
     next(error);

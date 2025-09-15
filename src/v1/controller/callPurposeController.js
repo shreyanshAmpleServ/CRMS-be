@@ -40,8 +40,8 @@ const deleteCallPurpose = async (req, res, next) => {
 
 const getAllCallPurpose = async (req, res, next) => {
     try {
-        const {dataFilter} = req.query
-        const callPurposes = await callPurposeService.getAllCallPurposes(dataFilter);
+        const {is_active, page , size ,search ,startDate,endDate  } = req.query;
+        const callPurposes = await callPurposeService.getAllCallPurposes(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, callPurposes);
     } catch (error) {
         next(error);

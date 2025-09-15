@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new state
@@ -84,12 +85,24 @@ const deleteState = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === "P2003") {
+        // Foreign key constraint failed
+        throw new Error(
+          "Cannot delete this state because related records exist. Please remove them first."
+        );
+      }
+      if (error.code === "P2025") {
+        // Record not found
+        throw new Error("Record not found");
+      }
+    }
     throw new CustomError(`Error deleting state: ${error.message}`, 500);
   }
 };
 
 // Get all states
-const getAllStates = async (search,page,size,country_id) => {
+const getAllStates = async (is_active,search,page,size,country_id) => {
   try {
     page = (!page || (page == 0)) ?  1 : page ;
     size = size || 10;
@@ -100,7 +113,10 @@ const getAllStates = async (search,page,size,country_id) => {
       filters.name = { contains: search.toLowerCase() }
     }
     if (country_id) {
-      filters.country_code = { equal: country_id}
+      filters.country_code = { equals: country_id}
+    }
+    if(is_active){
+      filters.is_active =  { equals: is_active }
     }
     const states = await prisma.crms_m_states.findMany({
       where:filters,

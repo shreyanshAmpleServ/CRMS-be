@@ -40,8 +40,8 @@ const deleteMeetingType = async (req, res, next) => {
 
 const getAllMeetingTypes = async (req, res, next) => {
     try {
-        const {dataFilter } = req.query
-        const callStatuses = await meetingTypeService.getAllMeetingTypes(dataFilter);
+        const {is_active, page , size ,search ,startDate,endDate  } = req.query;
+        const callStatuses = await meetingTypeService.getAllMeetingTypes(is_active,search ,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, callStatuses);
     } catch (error) {
         next(error);
