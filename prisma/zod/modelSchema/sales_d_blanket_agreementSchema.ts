@@ -1,0 +1,70 @@
+import { z } from 'zod';
+import { Prisma } from '@prisma/client'
+
+/////////////////////////////////////////
+// SALES D BLANKET AGREEMENT SCHEMA
+/////////////////////////////////////////
+
+export const sales_d_blanket_agreementSchema = z.object({
+  id: z.number(),
+  customer_code: z.string().nullish(),
+  customer_name: z.string().nullish(),
+  contact_person_id: z.number().nullish(),
+  start_date: z.coerce.date().nullish(),
+  end_date: z.coerce.date().nullish(),
+  termination_date: z.coerce.date().nullish(),
+  description: z.string().nullish(),
+  agreement_type: z.string().nullish(),
+  status: z.string().nullish(),
+  owner_id: z.number().nullish(),
+  renewal_flag: z.string().nullish(),
+  use_discount_flag: z.string().nullish(),
+  reminder_value: z.number().nullish(),
+  reminder_unit: z.string().nullish(),
+  remarks: z.string().nullish(),
+  attachment_id: z.number().nullish(),
+  log_instance: z.number().nullish(),
+  created_by: z.number().nullish(),
+  created_on: z.coerce.date().nullish(),
+  modified_by: z.number().nullish(),
+  modified_on: z.coerce.date().nullish(),
+  cancelled_flag: z.string().nullish(),
+  data_source: z.string().nullish(),
+  transferred_flag: z.string().nullish(),
+  reminder_flag: z.string().nullish(),
+  fulfilled_flag: z.string().nullish(),
+  attachment_path: z.string().nullish(),
+  settle_probability: z.instanceof(Prisma.Decimal, { message: "Field 'settle_probability' must be a Decimal. Location: ['Models', 'sales_d_blanket_agreement']"}).nullish(),
+  modified_time: z.string().nullish(),
+  fulfillment_method: z.string().nullish(),
+  payment_terms_id: z.number().nullish(),
+  price_list_id: z.number().nullish(),
+  signing_date: z.coerce.date().nullish(),
+  amended_to_id: z.number().nullish(),
+  series_id: z.number().nullish(),
+  document_number: z.string().nullish(),
+  object_type: z.string().nullish(),
+  handwritten_flag: z.string().nullish(),
+  project_indicator: z.string().nullish(),
+  bp_type: z.string().nullish(),
+  instance_id: z.number().nullish(),
+  payment_method: z.string().nullish(),
+  customer_ref_no: z.string().nullish(),
+  bp_currency: z.string().nullish(),
+  fixed_exchange_rate: z.instanceof(Prisma.Decimal, { message: "Field 'fixed_exchange_rate' must be a Decimal. Location: ['Models', 'sales_d_blanket_agreement']"}).nullish(),
+  transportation_code: z.number().nullish(),
+  project_code: z.string().nullish(),
+  price_mode: z.string().nullish(),
+  workflow_status: z.string().nullish(),
+  from_status: z.string().nullish(),
+  dpp_status: z.string().nullish(),
+  createdate: z.coerce.date().nullish(),
+  createdby: z.number(),
+  updatedate: z.coerce.date().nullish(),
+  updatedby: z.number().nullish(),
+  log_inst: z.number().nullish(),
+})
+
+export type sales_d_blanket_agreement = z.infer<typeof sales_d_blanket_agreementSchema>
+
+export default sales_d_blanket_agreementSchema;

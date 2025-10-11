@@ -184,7 +184,8 @@ model Deal {
   dealName          String
   status            String?             @default("Open")
   dealValue         Float?
-  currency          String?
+  currency_id       Int?
+  country_id        Int?
   period            String?
   periodValue       Int?
   dueDate           DateTime
@@ -209,7 +210,9 @@ model Deal {
   DealHistory       DealHistory[]
   deal_details      crms_m_contact[]    @relation("ContactDeal")
   pipeline          Pipeline?           @relation(fields: [pipelineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  deals             Stage?              @relation(fields: [stageId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  deals             Stage?              @relation(fields: [stageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deal_currency     Currency?           @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deal_country      Country?            @relation(fields: [country_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
   @@map("crms_m_deals")
 }
@@ -499,6 +502,7 @@ model Country {
   contact_Country crms_m_contact[]
   country_details crms_m_states[]
   country         crms_m_vendor[]
+  deal_country    Deal[]
 
   @@map("crms_m_countries")
 }
@@ -517,6 +521,7 @@ model Currency {
   log_inst                  Int?
   invoice_currency          crms_d_invoice[]
   order_currency            crms_d_orders[]
+  deal_currency             Deal[]
   purchase_invoice_currency crms_d_purchase_invoice[]
   purchase_order_currency   crms_d_purchase_orders[]
   quotation_currency        crms_d_quotations[]

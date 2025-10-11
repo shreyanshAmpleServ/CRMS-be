@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
+const {
+  PrismaClientKnownRequestError,
+} = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Serialize `tags` before saving it
@@ -73,6 +75,8 @@ const createDeal = async (data) => {
           },
           pipeline: true,
           DealHistory: true,
+          deal_currency: true,
+          deal_country: true,
         },
       });
 
@@ -136,6 +140,8 @@ const updateDeal = async (id, data) => {
           deals: true,
           pipeline: true,
           DealHistory: true,
+          deal_currency: true,
+          deal_country: true,
         },
       });
 
@@ -160,6 +166,8 @@ const findDealById = async (id) => {
           },
         },
         DealHistory: true,
+        deal_currency: true,
+        deal_country: true,
       },
     });
     return parseTags(deal);
@@ -238,6 +246,8 @@ const getAllDeals = async (
         deals: true,
         pipeline: true,
         DealHistory: true,
+        deal_currency: true,
+        deal_country: true,
       },
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
