@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "https://crms-demo.dcctz.com"
+      "https://crms-demo.dcctz.com",
       "https://crms.dcctz.com",
       "https://crms_live.dcctz.com",
       "http://localhost:3000",
