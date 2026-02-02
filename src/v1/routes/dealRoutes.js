@@ -12,6 +12,7 @@ router.get('/deals/:id', authenticateToken, dealController.getDealById);
 
 // Route to update an existing deal by its ID
 router.put('/deals/:id', authenticateToken, dealController.updateDeal);
+router.put('/deals-owner-transfer', authenticateToken, dealController.transferDealOwner);
 
 // Route to delete a specific deal by its ID
 router.delete('/deals/:id', authenticateToken, dealController.deleteDeal);

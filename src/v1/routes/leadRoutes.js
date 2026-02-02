@@ -31,5 +31,6 @@ router.get('/lead-statuses', authenticateToken, leadController.getAllLeadsGroupe
 
 // Delete a lead
 router.delete('/leads/:id', authenticateToken, leadController.deleteLead);
+router.put('/leads-owner-transfer', authenticateToken, leadController.leadOwnerTransfer);
 
 module.exports = router;

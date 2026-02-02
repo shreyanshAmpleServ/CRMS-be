@@ -16,7 +16,8 @@ const getDealById = async (req, res, next) => {
 
 const getDashboardData = async (req, res, next) => {
   try {
-    const getAllData = await dashboardService.getDashboardData(req.query.filterDays);
+    const user = req.user
+    const getAllData = await dashboardService.getDashboardData(req.query.filterDays, user);
     res.status(200).success(null, getAllData);
   } catch (error) {
     next(error);

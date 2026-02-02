@@ -10,6 +10,9 @@ const serializeTags = (data) => {
   if (data.tags) {
     data.tags = JSON.stringify(data.tags);
   }
+  if(!data.assigneeId){
+    data.assigneeId = Number(data.createdBy)
+  }
   return data;
 };
 
@@ -38,7 +41,28 @@ const validateContactsExist = async (contactIds) => {
     );
   }
 };
+const getDealsWithReferences = async (id) => {
+  const Deal = await prisma.Deal.findUnique({
+    where: { id: parseInt(id) },
+    include: {
+      DealContacts: {
+        include: {
+          contact: true, // Include contact details
+        },
+      },
+      deals: true,
+      pipeline: true,
+      DealHistory: true,
+      deal_currency: true,
+      deal_country: true,
+      deal_owner:true
+    },
+  });
 
+  if (!Deal) throw new CustomError("Deal not found", 404);
+
+  return Deal;
+};
 // Create a new deal
 const createDeal = async (data) => {
   const { contactIds, ...dealData } = data; // Separate `contactIds` from other deal data
@@ -77,6 +101,7 @@ const createDeal = async (data) => {
           DealHistory: true,
           deal_currency: true,
           deal_country: true,
+          deal_owner:true,
         },
       });
 
@@ -142,6 +167,7 @@ const updateDeal = async (id, data) => {
           DealHistory: true,
           deal_currency: true,
           deal_country: true,
+          deal_owner:true
         },
       });
 
@@ -168,6 +194,8 @@ const findDealById = async (id) => {
         DealHistory: true,
         deal_currency: true,
         deal_country: true,
+        deal_owner:true
+
       },
     });
     return parseTags(deal);
@@ -184,12 +212,15 @@ const getAllDeals = async (
   startDate,
   endDate,
   status,
-  priority
+  priority,
+  userId
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    console.log("Page first Count : ", page);
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
+    console.log("Page first Count 2 : ", page);
 
     const filters = {};
     // Handle search
@@ -221,6 +252,14 @@ const getAllDeals = async (
     if (priority) {
       filters.priority = { equals: priority };
     }
+    // Restrict non-admin users to their own deals
+    if (userId && userId.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(userId.id) } },
+        { updatedBy: { equals: Number(userId.id) } },
+        { assigneeId: { equals: Number(userId.id) } }
+      ]
+    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -248,6 +287,8 @@ const getAllDeals = async (
         DealHistory: true,
         deal_currency: true,
         deal_country: true,
+        deal_owner:true
+
       },
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
@@ -255,7 +296,7 @@ const getAllDeals = async (
       const { deals, ...rest } = parseTags(deal); // Remove "deals" key
       return { ...rest, stages: deal.deals || [] }; // Rename "stages" to "deals"
     });
-    const totalCount = await prisma.Deal.count();
+    const totalCount = await prisma.Deal.count({ where: filters });
     return {
       data: formattedDeals,
       currentPage: page,
@@ -296,10 +337,52 @@ const deleteDeal = async (id) => {
     throw new CustomError(`Error deleting opportunity: ${error.message}`, 500);
   }
 };
+const transferDealOwner = async (deal_ids, owner_id, userId) => {
+  try {
+    if (!Array.isArray(deal_ids) || deal_ids.length === 0) {
+      throw new CustomError('deal_ids must be a non-empty array', 400);
+    }
+    // Prepare update data
+    let updateData = {
+      updatedBy: Number(userId),
+      updatedDate: new Date(),
+    };
+
+    // Only set assigneeId if owner_id is provided
+    if (owner_id) {
+      updateData.assigneeId = Number(owner_id);
+    }
+    // Perform a bulk update
+    await prisma.Deal.updateMany({
+      where: {
+        id: { in: deal_ids.map((id) => parseInt(id, 10)) },
+      },
+      data: updateData
+    });
+
+    // Fetch and return each lead with its relations
+    const updatedDeals = await Promise.all(
+      deal_ids.map(async (id) => {
+        return await getDealsWithReferences(parseInt(id, 10));
+      })
+    );
+
+    return updatedDeals;
+  } catch (error) {
+    console.error('Error transferring deal owners:', error);
+    throw new CustomError(
+      `Failed to transfer deal ownership: ${error.message}`,
+      error.statusCode || 500
+    );
+  }
+};
+
 module.exports = {
   createDeal,
   findDealById,
   updateDeal,
   getAllDeals,
   deleteDeal,
+  transferDealOwner,
+  transferDealOwner
 };

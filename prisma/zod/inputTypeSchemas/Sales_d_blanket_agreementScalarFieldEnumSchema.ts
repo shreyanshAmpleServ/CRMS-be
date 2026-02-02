@@ -1,5 +1,0 @@
-import { z } from 'zod';
-
-export const Sales_d_blanket_agreementScalarFieldEnumSchema = z.enum(['id','customer_code','customer_name','contact_person_id','start_date','end_date','termination_date','description','agreement_type','status','owner_id','renewal_flag','use_discount_flag','reminder_value','reminder_unit','remarks','attachment_id','log_instance','created_by','created_on','modified_by','modified_on','cancelled_flag','data_source','transferred_flag','reminder_flag','fulfilled_flag','attachment_path','settle_probability','modified_time','fulfillment_method','payment_terms_id','price_list_id','signing_date','amended_to_id','series_id','document_number','object_type','handwritten_flag','project_indicator','bp_type','instance_id','payment_method','customer_ref_no','bp_currency','fixed_exchange_rate','transportation_code','project_code','price_mode','workflow_status','from_status','dpp_status','createdate','createdby','updatedate','updatedby','log_inst']);
-
-export default Sales_d_blanket_agreementScalarFieldEnumSchema;

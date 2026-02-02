@@ -66,7 +66,7 @@ const createLead = async (req, res, next) => {
     let leadData = { ...req.body };
     leadData = sanitizeLeadData(req, leadData, imageUrl); // Sanitize the lead data and handle company icon
 
-    const lead = await leadService.createLead(leadData);
+    const lead = await leadService.createLead({...leadData,createdby:req.user.id});
     res.status(201).success('Lead created successfully', lead);
   } catch (error) {
     next(error);
@@ -100,10 +100,8 @@ const updateLead = async (req, res, next) => {
       leadData = sanitizeLeadData(req, leadData, imageUrl);
     }
 
-    console.log("Lead Data:", leadData);
-    // Sanitize the lead data and handle company icon
     
-    const lead = await leadService.updateLead(req.params.id, leadData);
+    const lead = await leadService.updateLead(req.params.id, {...leadData,updatedby:req.user.id});
     res.status(200).success('Lead updated successfully', lead);
     if (req.file) {
       if (existingData.company_icon) {
@@ -130,7 +128,8 @@ const deleteLead = async (req, res, next) => {
 const getAllLeads = async (req, res, next) => {
   try {
     const { page , size , search ,startDate,endDate ,status   } = req.query;
-    const leads = await leadService.getAllLeads(Number(page), Number(size) ,search ,startDate && moment(startDate),endDate && moment(endDate), status);
+    const userId = req.user;
+    const leads = await leadService.getAllLeads(Number(page), Number(size) ,search ,startDate && moment(startDate),endDate && moment(endDate), status,userId);
     res.status(200).success(null, leads);
   } catch (error) {
     next(error);
@@ -139,7 +138,18 @@ const getAllLeads = async (req, res, next) => {
 
 const getAllLeadsGroupedByLostReasons = async (req, res, next) => {
   try {
-    const leads = await leadService.getAllLeadsGroupedByLostReasons();
+    const userId = req.user;
+    const leads = await leadService.getAllLeadsGroupedByLostReasons(userId);
+    res.status(200).success(null, leads);
+  } catch (error) {
+    next(error);
+  }
+};
+const leadOwnerTransfer = async (req, res, next) => {
+  try {
+    const userId = req.user;
+    const {lead_ids,owner_id} = req.body
+    const leads = await leadService.leadOwnerTransfer(lead_ids,owner_id,userId);
     res.status(200).success(null, leads);
   } catch (error) {
     next(error);
@@ -153,4 +163,5 @@ module.exports = {
   updateLead,
   deleteLead,
   getAllLeads,
+  leadOwnerTransfer
 };

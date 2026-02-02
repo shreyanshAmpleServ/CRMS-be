@@ -116,6 +116,11 @@ const serializeLead = (data) => {
       connect: { id: Number(data.lead_owner) },
     };
   }
+  else{
+    lead.crms_m_user = {
+      connect: { id: Number(data.createdby) },
+    };
+  }
 
   if (data.company_id) {
     lead.lead_company = {
@@ -298,14 +303,11 @@ const createLead = async (data) => {
 
     if(is_contact){
       const serializedData = serializeContact({ ...datas});
-    console.log("DAta : ",serializedData,is_contact)
       const contact = await prisma.crms_m_contact.create({
         data: {
           ...serializedData,
           is_active: datas.is_active || "Y",
           log_inst: datas.log_inst || 1,
-          // state: Number(datas.state) || null,
-          // country: Number(datas.country) || null,
           createdate: new Date(),
           updatedate: new Date(),
         }
@@ -450,9 +452,9 @@ const deleteLead = async (id) => {
 };
 
 // Get all leads and include their references
-const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => {
+const getAllLeads = async (page , size , search ,startDate,endDate ,status, userId ) => {
   try {
-    page = (page || (page == 0)) ?  1 : page ;
+    page = (!page || (page == 0)) ?  1 : page ;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -483,6 +485,13 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
     }
     if(status){filters.lead_status = {equals :Number(status)} }
     // if(priority){filters.priority = {equals :priority} }
+    if (userId && userId.role !== "Admin") {
+      filters.OR = [
+        { createdby: { equals: Number(userId.id) } },
+        { updatedby: { equals: Number(userId.id) } },
+        { lead_owner: { equals: Number(userId.id) } }
+      ]
+    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -544,7 +553,7 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const totalCount = await prisma.crms_leads.count();
-    const totalCount = await prisma.crms_leads.count();
+    const totalCount = await prisma.crms_leads.count({where:filters});
 
     return {
         data: leads,
@@ -561,8 +570,15 @@ const getAllLeads = async (page , size , search ,startDate,endDate ,status ) => 
 
 
 // Get all leads grouped by lost reasons
-const getAllLeadsGroupedByLostReasons = async (search) => {
+const getAllLeadsGroupedByLostReasons = async (userId) => {
   try {
+    if (userId && userId.role !== "Admin") {
+      filters.OR = [
+        { createdby: { equals: Number(userId.id) } },
+        { updatedby: { equals: Number(userId.id) } },
+        { lead_owner: { equals: Number(userId.id) } }
+      ]
+    }
     // Step 1: Get all lost reasons
     const lostReasons = await prisma.LostReasons.findMany({
       select: {
@@ -691,6 +707,45 @@ const getAllLeadsGroupedByLostReasons = async (search) => {
   );
 }
 };
+const leadOwnerTransfer = async (lead_ids, owner_id, userId) => {
+  try {
+    if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
+      throw new CustomError('lead_ids must be a non-empty array', 400);
+    }
+    // Prepare update data
+    let updateData = {
+      updatedby: Number(userId),
+      updatedate: new Date(),
+    };
+
+    // Only set lead_owner if owner_id is provided
+    if (owner_id) {
+      updateData.lead_owner = Number(owner_id);
+    }
+    // Perform a bulk update
+    await prisma.crms_leads.updateMany({
+      where: {
+        id: { in: lead_ids.map((id) => parseInt(id, 10)) },
+      },
+      data: updateData
+    });
+
+    // Fetch and return each lead with its relations
+    const updatedLeads = await Promise.all(
+      lead_ids.map(async (id) => {
+        return await getLeadWithReferences(parseInt(id, 10));
+      })
+    );
+
+    return updatedLeads;
+  } catch (error) {
+    console.error('Error transferring lead owners:', error);
+    throw new CustomError(
+      `Failed to transfer lead ownership: ${error.message}`,
+      error.statusCode || 500
+    );
+  }
+};
 
 module.exports = {
   createLead,
@@ -700,4 +755,5 @@ module.exports = {
   deleteLead,
   getAllLeads,
   getAllLeadsGroupedByLostReasons, // Export the new function
+  leadOwnerTransfer
 };

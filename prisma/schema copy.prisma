@@ -7,6 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator zod {
+  provider                         = "zod-prisma-types"
+  output                           = "./zod" // 
+  useDecimalJs                     = true
+  useNamespace                     = true
+  useMultipleFiles                 = true // default is false
+  writeBarrelFiles                 = false // default is true
+  createInputTypeSchemas           = false
+  createInputTypes                 = false
+  createOutputTypes                = false
+  createModelTypes                 = true // default is true
+  addInputTypeValidation           = false // default is true
+  addIncludeType                   = true // default is true
+  addSelectType                    = true // default is true
+  validateWhereUniqueInput         = true // default is true
+  createOptionalDefaultValuesTypes = false // default is false
+  createRelationValuesTypes        = false // default is false
+  createPartialTypes               = false // default is false
+  useDefaultValidators             = false // default is true
+  coerceDate                       = true // default is true
+  writeNullishInModelTypes         = true // default is false
+}
+
 model crms_d_role_permission {
   id                Int               @id(map: "PK__crms_d_r__3213E83F835C1EB7") @default(autoincrement())
   role_id           Int
@@ -18,9 +41,9 @@ model crms_d_role_permission {
   updatedate        DateTime?         @db.DateTime
   createdby         Int               @default(1, map: "DF__crms_d_ro__creat__276EDEB3")
   updatedby         Int?
-  crms_m_module     crms_m_module     @relation(fields: [module_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_module")
-  crms_m_permission crms_m_permission @relation(fields: [permission_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_permission")
-  crms_m_role       crms_m_role       @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_role_permission_role")
+  crms_m_module     crms_m_module     @relation(fields: [module_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_module")
+  crms_m_permission crms_m_permission @relation(fields: [permission_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_permission")
+  crms_m_role       crms_m_role       @relation(fields: [role_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_role_permission_role")
 }
 
 model crms_d_user_role {
@@ -33,8 +56,8 @@ model crms_d_user_role {
   updatedate  DateTime?   @db.DateTime
   createdby   Int         @default(1, map: "DF__crms_d_us__creat__2D27B809")
   updatedby   Int?
-  crms_m_role crms_m_role @relation(fields: [role_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_user_role_role")
-  crms_m_user crms_m_user @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "FK_crms_d_user_role_user")
+  crms_m_role crms_m_role @relation(fields: [role_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_user_role_role")
+  crms_m_user crms_m_user @relation(fields: [user_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK_crms_d_user_role_user")
 }
 
 model crms_m_contact {
@@ -78,13 +101,13 @@ model crms_m_contact {
   camp_contact          CampaignContacts[]
   case_contact          crms_d_cases[]
   dealContacts          DealContacts[]
-  company_details       Company?            @relation("CompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction)
-  contact_Country       Country?            @relation(fields: [country], references: [id], onUpdate: NoAction)
-  deal_details          Deal?               @relation("ContactDeal", fields: [deal_id], references: [id], onUpdate: NoAction)
-  industry_details      Industries?         @relation("ContactIndustry", fields: [industry], references: [id], onUpdate: NoAction)
-  owner_details         crms_m_user?        @relation("ContactOwner", fields: [owner], references: [id], onUpdate: NoAction)
-  source_details        Sources?            @relation("ContactSource", fields: [source], references: [id], onUpdate: NoAction)
-  contact_State         crms_m_states?      @relation(fields: [state], references: [id], onUpdate: NoAction)
+  company_details       Company?            @relation("CompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  contact_Country       Country?            @relation(fields: [country], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  deal_details          Deal?               @relation("ContactDeal", fields: [deal_id], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  industry_details      Industries?         @relation("ContactIndustry", fields: [industry], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  owner_details         crms_m_user?        @relation("ContactOwner", fields: [owner], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  source_details        Sources?            @relation("ContactSource", fields: [source], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  contact_State         crms_m_states?      @relation(fields: [state], references: [id], onUpdate: NoAction, onDelete: SetNull)
 }
 
 model crms_m_module {
@@ -161,7 +184,8 @@ model Deal {
   dealName          String
   status            String?             @default("Open")
   dealValue         Float?
-  currency          String?
+  currency_id       Int?
+  country_id        Int?
   period            String?
   periodValue       Int?
   dueDate           DateTime
@@ -185,8 +209,10 @@ model Deal {
   DealContacts      DealContacts[]
   DealHistory       DealHistory[]
   deal_details      crms_m_contact[]    @relation("ContactDeal")
-  pipeline          Pipeline?           @relation(fields: [pipelineId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pipeline          Pipeline?           @relation(fields: [pipelineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   deals             Stage?              @relation(fields: [stageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deal_currency     Currency?           @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deal_country      Country?            @relation(fields: [country_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
   @@map("crms_m_deals")
 }
@@ -319,7 +345,6 @@ model crms_leads {
   first_name          String?           @db.NVarChar(50)
   last_name           String?           @db.NVarChar(50)
   title               String?           @db.NVarChar(100)
-  jobTitle            String?           @db.VarChar(100)
   email               String?           @db.NVarChar(100)
   phone               String?           @db.NVarChar(20)
   fax                 String?           @db.NVarChar(20)
@@ -355,14 +380,15 @@ model crms_leads {
   log_inst            Int?
   company_icon        String?           @db.NVarChar(300)
   company_id          Int
+  jobTitle            String?           @db.VarChar(100)
   crms_calls          crms_calls[]
-  lead_Country        Country?          @relation(fields: [country], references: [id], onUpdate: NoAction)
-  crms_m_industries   Industries?       @relation(fields: [industry], references: [id], onUpdate: NoAction)
-  crms_m_sources      Sources?          @relation(fields: [lead_source], references: [id], onUpdate: NoAction)
-  crms_m_lost_reasons LostReasons?      @relation(fields: [lead_status], references: [id], onUpdate: NoAction)
-  lead_State          crms_m_states?    @relation(fields: [state], references: [id], onUpdate: NoAction)
-  lead_company        Company           @relation("LeadCompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, map: "FK__crms_lead__company_id")
-  crms_m_user         crms_m_user       @relation(fields: [lead_owner], references: [id], onUpdate: NoAction, map: "FK__crms_lead__lead___40058253")
+  lead_Country        Country?          @relation(fields: [country], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_industries   Industries?       @relation(fields: [industry], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_sources      Sources?          @relation(fields: [lead_source], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  crms_m_lost_reasons LostReasons?      @relation(fields: [lead_status], references: [id], onUpdate: NoAction, onDelete: SetNull)
+  lead_State          crms_m_states?    @relation(fields: [state], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  lead_company        Company           @relation("LeadCompanyDetail", fields: [company_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__crms_lead__company_id")
+  crms_m_user         crms_m_user       @relation(fields: [lead_owner], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__crms_lead__lead___40058253")
   campaigns           crms_d_campaign[] @relation("CampaignLead")
 }
 
@@ -476,6 +502,7 @@ model Country {
   contact_Country crms_m_contact[]
   country_details crms_m_states[]
   country         crms_m_vendor[]
+  deal_country    Deal[]
 
   @@map("crms_m_countries")
 }
@@ -494,6 +521,7 @@ model Currency {
   log_inst                  Int?
   invoice_currency          crms_d_invoice[]
   order_currency            crms_d_orders[]
+  deal_currency             Deal[]
   purchase_invoice_currency crms_d_purchase_invoice[]
   purchase_order_currency   crms_d_purchase_orders[]
   quotation_currency        crms_d_quotations[]
@@ -877,7 +905,7 @@ model crms_m_vendor {
   phone                   String?                   @db.NVarChar(20)
   email                   String?                   @db.NVarChar(100)
   is_active               String                    @default("Y", map: "DF__crms_m_ve__is_ac__5A846E65") @db.Char(1)
-  account_owner           Int
+  account_owner           Int?
   website                 String                    @db.NVarChar(200)
   glaccount               String                    @db.NVarChar(50)
   category                String                    @db.NVarChar(100)
@@ -902,7 +930,7 @@ model crms_m_vendor {
   vendor                  crms_m_products[]
   country                 Country?                  @relation(fields: [billing_country], references: [id], onUpdate: NoAction)
   state                   crms_m_states?            @relation(fields: [billing_state], references: [id], onUpdate: NoAction)
-  crms_m_user             crms_m_user               @relation(fields: [account_owner], references: [id], onUpdate: NoAction, map: "FK__crms_m_ve__accou__5B78929E")
+  crms_m_user             crms_m_user?              @relation(fields: [account_owner], references: [id], onUpdate: NoAction, onDelete: SetNull, map: "FK__crms_m_ve__accou__5B78929E")
 }
 
 model crms_tags {
@@ -1160,7 +1188,7 @@ model crms_d_quotations {
   other_items          String?                  @db.NText
   quotation_items      crms_d_quotation_items[]
   quotation_currency   Currency?                @relation(fields: [currency], references: [id], onUpdate: NoAction)
-  quotation_vendor     crms_m_vendor            @relation(fields: [vendor_id], references: [id], onUpdate: NoAction)
+  quotation_vendor     crms_m_vendor            @relation(fields: [vendor_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model crms_d_purchase_order_items {

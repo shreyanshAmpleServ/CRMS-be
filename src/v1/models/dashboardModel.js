@@ -32,21 +32,27 @@ const findDealById = async (id) => {
 };
 
 // Get all deals
-const getDashboardData = async (filterDays) => {
+const getDashboardData = async (filterDays,user) => {
   try {
+    console.log("User get : ",user)
     const { startDate, endDate } = filterDays;
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
-    //  const days = Number(filterDays) || 30;
-    //  const today = new Date();
-    //  const startDate = new Date(today);
-    //  startDate.setDate(today.getDate() - days);
+    const filters = {}
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } }
+      ]
+    }
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
     }
     const deal = await prisma.Deal.findMany({
       where: {
+        ...filters,
         createdDate: {
           gte: startMoment.toDate(), // Get deals from the selected range
           lte: endMoment.toDate(), // Get deals from the last `filterDays`
@@ -61,6 +67,7 @@ const getDashboardData = async (filterDays) => {
     });
     const deals = await prisma.Deal.findMany({
       where: {
+        ...filters,
         ...(startMoment && endMoment && {
           createdDate: {
             gte: startMoment.toDate(),
@@ -78,7 +85,9 @@ const getDashboardData = async (filterDays) => {
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const dealsss = await prisma.Deal.findMany({
-      where:{...(startMoment && endMoment && {
+      where:{
+        ...filters,
+        ...(startMoment && endMoment && {
         createdDate: {
           gte: startMoment.toDate(),
           lte: endMoment.toDate(),
@@ -96,7 +105,9 @@ const getDashboardData = async (filterDays) => {
     });
     const wonDeals = dealsss.filter((deal) => deal.status === "Won");
     const dealssss = await prisma.Deal.findMany({
-      where:{...(startMoment && endMoment && {
+      where:{
+        ...filters,
+        ...(startMoment && endMoment && {
         createdDate: {
           gte: startMoment.toDate(),
           lte: endMoment.toDate(),

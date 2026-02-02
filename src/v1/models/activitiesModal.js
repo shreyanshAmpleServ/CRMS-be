@@ -161,7 +161,7 @@ const updateActivities = async (id, data) => {
 // Get all Activities statuses
 const getAllActivities = async (reqBody) => {
   try {
-    page = !reqBody?.page || reqBody?.page == 0 ? 1 : reqBody?.page;
+    page = (!reqBody?.page || reqBody?.page == 0) ? 1 : reqBody?.page;
     size = reqBody?.size || 10;
     const skip = (page - 1) * size || 0;
 
