@@ -38,7 +38,7 @@ const registerUser = async (email, password, fullName = null) => {
   } catch (error) {
     throw new CustomError(
       error.message || "Failed to login user",
-      error.status || 500
+      error.status || 500,
     );
   }
 };
@@ -47,12 +47,12 @@ const loginUser = async (email, password) => {
   try {
     // Check Redis cache first
     // const cachedUser = await redisClient.get(email);
+
     let user;
     // if (cachedUser) {
     //   console.log("Catched Data ;")         // Fetch cached user
     //   user = JSON.parse(cachedUser);
     // } else {
-    //   console.log("DB Data ;")
     user = await userModel.findUserByEmail(email); // Fetch from DB
     //   if (user) {
     //     await redisClient.setEx(email, 3600, JSON.stringify(user)); // Set user in cache for 1 hour
@@ -75,7 +75,7 @@ const loginUser = async (email, password) => {
     }
     throw new CustomError(
       error.message || "Failed to login user",
-      error.status || 500
+      error.status || 500,
     );
   }
 };

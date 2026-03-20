@@ -1,11 +1,51 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
+const {
+  PrismaClientKnownRequestError,
+} = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new state
+// const createState = async (data) => {
+//   try {
+//     const state = await prisma.crms_m_states.create({
+//       data: {
+//         ...data,
+//         is_active: data.is_active || "Y",
+//         createdby: data.createdby || 1,
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         country_details: {
+//           select: {
+//             id: true,
+//             name: true,
+//             code: true,
+//           },
+//         },
+//       },
+//     });
+//     return state;
+//   } catch (error) {
+//     throw new CustomError(`Error creating state: ${error.message}`, 500);
+//   }
+// };
 const createState = async (data) => {
   try {
+    const existing = await prisma.crms_m_states.findFirst({
+      where: {
+        name: data.name,
+        country_code: data.country_code,
+      },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `State "${data.name}" already exists for this country`,
+        400,
+      );
+    }
+
     const state = await prisma.crms_m_states.create({
       data: {
         ...data,
@@ -15,17 +55,56 @@ const createState = async (data) => {
       },
       include: {
         country_details: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
+          select: { id: true, name: true, code: true },
         },
       },
     });
+
     return state;
   } catch (error) {
     throw new CustomError(`Error creating state: ${error.message}`, 500);
+  }
+};
+// Update a state
+const updateState = async (id, data) => {
+  try {
+    const existing = await prisma.crms_m_states.findFirst({
+      where: {
+        AND: [
+          {
+            name: data.name,
+            country_code: data.country_code,
+          },
+          {
+            NOT: { id: parseInt(id) },
+          },
+        ],
+      },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `Another state with same name exists in this country`,
+        400,
+      );
+    }
+
+    const updatedState = await prisma.crms_m_states.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...data,
+        updatedate: new Date(),
+      },
+      include: {
+        country_details: {
+          select: { id: true, name: true, code: true },
+        },
+      },
+    });
+
+    return updatedState;
+  } catch (error) {
+    throw new CustomError(`Error updating state: ${error.message}`, 500);
   }
 };
 
@@ -53,31 +132,6 @@ const findStateById = async (id) => {
   }
 };
 
-// Update a state
-const updateState = async (id, data) => {
-  try {
-    const updatedState = await prisma.crms_m_states.update({
-      where: { id: parseInt(id) },
-      include: {
-        country_details: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-      },
-      data: {
-        ...data,
-        updatedate: new Date(),
-      },
-    });
-    return updatedState;
-  } catch (error) {
-    throw new CustomError(`Error updating state: ${error.message}`, 500);
-  }
-};
-
 // Delete a state
 const deleteState = async (id) => {
   try {
@@ -89,7 +143,7 @@ const deleteState = async (id) => {
       if (error.code === "P2003") {
         // Foreign key constraint failed
         throw new Error(
-          "Cannot delete this state because related records exist. Please remove them first."
+          "Cannot delete this state because related records exist. Please remove them first.",
         );
       }
       if (error.code === "P2025") {
@@ -102,24 +156,24 @@ const deleteState = async (id) => {
 };
 
 // Get all states
-const getAllStates = async (is_active,search,page,size,country_id) => {
+const getAllStates = async (is_active, search, page, size, country_id) => {
   try {
-    page = (!page || (page == 0)) ?  1 : page ;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
     if (search) {
-      filters.name = { contains: search.toLowerCase() }
+      filters.name = { contains: search.toLowerCase() };
     }
     if (country_id) {
-      filters.country_code = { equals: country_id}
+      filters.country_code = { equals: country_id };
     }
-    if(is_active){
-      filters.is_active =  { equals: is_active }
+    if (is_active) {
+      filters.is_active = { equals: is_active };
     }
     const states = await prisma.crms_m_states.findMany({
-      where:filters,
+      where: filters,
       skip: skip,
       take: size,
       include: {
@@ -139,15 +193,15 @@ const getAllStates = async (is_active,search,page,size,country_id) => {
     });
     const totalCount = await prisma.crms_m_states.count({
       where: filters,
-  });
+    });
 
     return {
-        data: states,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: states,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
     console.log(error);
     throw new CustomError("Error retrieving states", 503);

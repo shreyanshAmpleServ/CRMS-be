@@ -1,26 +1,79 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
-const { PrismaClientKnownRequestError } = require('@prisma/client/runtime/library');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
+const {
+  PrismaClientKnownRequestError,
+} = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 const createCountry = async (data) => {
   try {
+    // 🔍 Check duplicate
+    const existing = await prisma.Country.findFirst({
+      where: {
+        OR: [{ name: data.name }, { code: data.code }],
+      },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `Country already exists with same name or code (Name: ${data.name}, Code: ${data.code})`,
+        400,
+      );
+    }
+
     const country = await prisma.Country.create({
       data: {
         ...data,
-        name: data.name,
-        is_active: data.is_active || 'Y',
+        is_active: data.is_active || "Y",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-        createdate:new Date(),
+        createdate: new Date(),
         updatedate: new Date(),
-        updatedby:1,
+        updatedby: 1,
       },
     });
+
     return country;
   } catch (error) {
-    console.log("Create Country ",error)
+    console.log("Create Country ", error);
     throw new CustomError(`Error creating country: ${error.message}`, 500);
+  }
+};
+
+const updateCountry = async (id, data) => {
+  try {
+    // 🔍 Check duplicate excluding current record
+    const existing = await prisma.Country.findFirst({
+      where: {
+        AND: [
+          {
+            OR: [{ name: data.name }, { code: data.code }],
+          },
+          {
+            NOT: { id: parseInt(id) },
+          },
+        ],
+      },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `Another country already exists with same name or code`,
+        400,
+      );
+    }
+
+    const updatedCountry = await prisma.Country.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...data,
+        updatedate: new Date(),
+      },
+    });
+
+    return updatedCountry;
+  } catch (error) {
+    throw new CustomError(`Error updating country: ${error.message}`, 500);
   }
 };
 
@@ -30,27 +83,12 @@ const findCountryById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!country) {
-      throw new CustomError('Country not found', 404);
+      throw new CustomError("Country not found", 404);
     }
     return country;
   } catch (error) {
-    console.log("Country By Id  ",error)
+    console.log("Country By Id  ", error);
     throw new CustomError(`Error finding country by ID: ${error.message}`, 503);
-  }
-};
-
-const updateCountry = async (id, data) => {
-  try {
-    const updatedCountry = await prisma.Country.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...data,
-        updatedate: new Date(),
-      },
-    });
-    return updatedCountry;
-  } catch (error) {
-    throw new CustomError(`Error updating country: ${error.message}`, 500);
   }
 };
 
@@ -64,7 +102,7 @@ const deleteCountry = async (id) => {
       if (error.code === "P2003") {
         // Foreign key constraint failed
         throw new Error(
-          "Cannot delete this country because related records exist. Please remove them first."
+          "Cannot delete this country because related records exist. Please remove them first.",
         );
       }
       if (error.code === "P2025") {
@@ -76,7 +114,14 @@ const deleteCountry = async (id) => {
   }
 };
 
-const getAllCountries = async (is_active ,search ,page , size,startDate,endDate) => {
+const getAllCountries = async (
+  is_active,
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+) => {
   try {
     page = page || 1;
     size = size || 10;
@@ -86,8 +131,8 @@ const getAllCountries = async (is_active ,search ,page , size,startDate,endDate)
     if (search) {
       filters.OR = [{ name: { contains: search.toLowerCase() } }];
     }
-    if(is_active){
-      filters.is_active =  { equals: is_active }
+    if (is_active) {
+      filters.is_active = { equals: is_active };
     }
     const countries = await prisma.Country.findMany({
       where: filters,
@@ -99,9 +144,9 @@ const getAllCountries = async (is_active ,search ,page , size,startDate,endDate)
         // { createdate: 'desc' },
       ],
     });
-    const totalCount = await prisma.Country.count( { where: filters});
+    const totalCount = await prisma.Country.count({ where: filters });
 
-    return  {
+    return {
       data: countries,
       currentPage: page,
       size,
