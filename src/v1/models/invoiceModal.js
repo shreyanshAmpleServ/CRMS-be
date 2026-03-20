@@ -1,64 +1,75 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { PrismaClientKnownRequestError } = require("@prisma/client/runtime/library");
+const {
+  PrismaClientKnownRequestError,
+} = require("@prisma/client/runtime/library");
 const prisma = new PrismaClient();
 
 // Create a new  invoice
-const createInvoice = async (orderData,orderItemsData) => {
+const createInvoice = async (orderData, orderItemsData) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {
       // Step 1: Create the Order
       const createdOrder = await prisma.crms_d_invoice.create({
         data: {
           ...orderData,
-          cust_id : Number(orderData?.cust_id) || null,
-          currency : Number(orderData?.currency) || null,
-          sales_type : Number(orderData?.sales_type) || null,
-          rounding_amount : Number(orderData?.rounding_amount) || null,
+          cust_id: Number(orderData?.cust_id) || null,
+          currency: Number(orderData?.currency) || null,
+          sales_type: Number(orderData?.sales_type) || null,
+          rounding_amount: Number(orderData?.rounding_amount) || null,
           createdate: new Date(),
           updatedate: new Date(),
           updatedby: orderData.createdby || 1,
           updatedby: orderData.createdby || 1,
         },
       });
+      // ✅ Step 2: Generate SAFE code using ID
+      const formattedId = String(createdOrder.id).padStart(4, "0");
+      const quotationCode = `INV-${formattedId}`;
+
+      // ✅ Step 3: Update code
+      await prisma.crms_d_invoice.update({
+        where: { id: createdOrder.id },
+        data: { order_code: quotationCode }, // 👈 your column
+      });
       // Step 2: Create OrderItems using the created order's ID
       const orderItems = await prisma.crms_d_invoice_items.createMany({
-        data: orderItemsData.map(item => ({
+        data: orderItemsData.map((item) => ({
           ...item,
-          item_id : Number(item?.item_id) || null,
-          tax_id : Number(item?.tax_id) || null,
+          item_id: Number(item?.item_id) || null,
+          tax_id: Number(item?.tax_id) || null,
           parent_id: Number(createdOrder.id),
         })),
       });
 
-     // Fetch the newly created order with associated data
-     const orderWithDetails = await prisma.crms_d_invoice.findUnique({
-      where: { id: createdOrder.id },
-      include: {
-        invoice_items: true,
-        invoice_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-          }
-        },
-        invoice_currency: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
+      // Fetch the newly created order with associated data
+      const orderWithDetails = await prisma.crms_d_invoice.findUnique({
+        where: { id: createdOrder.id },
+        include: {
+          invoice_items: true,
+          invoice_vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              billing_zipcode: true,
+              billing_city: true,
+              country: true,
+              state: true,
+              billing_street: true,
+            },
+          },
+          invoice_currency: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return orderWithDetails;
+      return orderWithDetails;
     });
 
     return result;
@@ -79,8 +90,12 @@ const updateInvoice = async (orderId, orderData, orderItemsData) => {
           ...orderData,
           cust_id: orderData?.cust_id ? Number(orderData.cust_id) : null,
           currency: orderData?.currency ? Number(orderData.currency) : null,
-          sales_type: orderData?.sales_type ? Number(orderData.sales_type) : null,
-          rounding_amount: orderData?.rounding_amount ? Number(orderData.rounding_amount) : null,
+          sales_type: orderData?.sales_type
+            ? Number(orderData.sales_type)
+            : null,
+          rounding_amount: orderData?.rounding_amount
+            ? Number(orderData.rounding_amount)
+            : null,
           updatedate: new Date(),
           updatedby: orderData?.updatedby || 1,
         },
@@ -100,24 +115,62 @@ const updateInvoice = async (orderId, orderData, orderItemsData) => {
           parent_id: Number(orderId),
         })),
       });
-      
 
-     // Fetch the newly created order with associated data
-     const orderWithDetails = await prisma.crms_d_invoice.findUnique({
-      where: { id: updatedOrder.id },
+      // Fetch the newly created order with associated data
+      const orderWithDetails = await prisma.crms_d_invoice.findUnique({
+        where: { id: updatedOrder.id },
+        include: {
+          invoice_items: true,
+          invoice_vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              billing_zipcode: true,
+              billing_city: true,
+              country: true,
+              state: true,
+              billing_street: true,
+            },
+          },
+          invoice_currency: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
+      });
+
+      return orderWithDetails;
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Transaction failed:", error);
+    throw new Error("Failed to update invoice and order items");
+  }
+};
+
+// Find a Order by ID
+const findInvoiceById = async (id) => {
+  try {
+    const users = await prisma.crms_d_invoice.findUnique({
+      where: { id: parseInt(id) },
       include: {
-        invoice_items: true,
-        invoice_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-          }
+        invoice_items: true, // Include the related order items
+        invoice_vendor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            billing_zipcode: true,
+            billing_city: true,
+            country: true,
+            state: true,
+            billing_street: true,
+          },
         },
         invoice_currency: {
           select: {
@@ -128,50 +181,9 @@ const updateInvoice = async (orderId, orderData, orderItemsData) => {
         },
       },
     });
-
-    return orderWithDetails;
-
-    });
-
-    return result;
-  } catch (error) {
-    console.error("Transaction failed:", error);
-    throw new Error("Failed to update invoice and order items");
-  }
-};
-
-// Find a Order by ID 
-const findInvoiceById = async (id) => {
-  try {
-    const users = await prisma.crms_d_invoice.findUnique({
-      where:{ id: parseInt(id)},
-      include: {
-        invoice_items: true, // Include the related order items
-        invoice_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-          }
-        },
-        invoice_currency:{
-          select:{
-            id:true,
-            name:true,
-            code:true
-          }
-        }
-      },
-     
-    });
     return users;
   } catch (error) {
-    console.log("Error in Details of Product ", error)
+    console.log("Error in Details of Product ", error);
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
@@ -200,7 +212,7 @@ const deleteInvoice = async (orderId) => {
       if (error.code === "P2003") {
         // Foreign key constraint failed
         throw new Error(
-          "Cannot delete this sales invoice and associated items because related records exist. Please remove them first."
+          "Cannot delete this sales invoice and associated items because related records exist. Please remove them first.",
         );
       }
       if (error.code === "P2025") {
@@ -212,10 +224,9 @@ const deleteInvoice = async (orderId) => {
   }
 };
 
-
-const getAllInvoice = async (search ,page , size ,startDate, endDate) => {
+const getAllInvoice = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
     const filters = {};
@@ -224,8 +235,8 @@ const getAllInvoice = async (search ,page , size ,startDate, endDate) => {
       filters.OR = [
         {
           invoice_vendor: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           order_code: { contains: search.toLowerCase() },
@@ -259,25 +270,25 @@ const getAllInvoice = async (search ,page , size ,startDate, endDate) => {
       take: size,
       include: {
         invoice_items: true, // Include the related order items
-        invoice_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-          }
+        invoice_vendor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            billing_zipcode: true,
+            billing_city: true,
+            country: true,
+            state: true,
+            billing_street: true,
+          },
         },
-        invoice_currency:{
-          select:{
-            id:true,
-            name:true,
-            code:true
-          }
-        }
+        invoice_currency: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
@@ -289,10 +300,10 @@ const getAllInvoice = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error Order Modal : ", error)
+    console.log("Error Order Modal : ", error);
     throw new CustomError("Error retrieving invoice", 503);
   }
 };
@@ -301,17 +312,16 @@ const getAllInvoice = async (search ,page , size ,startDate, endDate) => {
 const generateInvoiceCode = async () => {
   try {
     const latestOrder = await prisma.crms_d_invoice.findFirst({
-      orderBy: { id: 'desc' }
+      orderBy: { id: "desc" },
     });
-     const nextId = latestOrder ? latestOrder.id + 1 : 1;
-    return `INV-00${nextId}`;
-} catch (error) {
-    console.log("Error to generation invoice code : ", error)
-    throw new CustomError('Error retrieving invoice code', 503);
-}
+    const nextId = latestOrder ? latestOrder.id + 1 : 1;
+    const formattedId = String(nextId).padStart(4, "0");
+    return `INV-${formattedId}`;
+  } catch (error) {
+    console.log("Error to generation invoice code : ", error);
+    throw new CustomError("Error retrieving invoice code", 503);
+  }
 };
-
-
 
 module.exports = {
   createInvoice,
@@ -319,5 +329,5 @@ module.exports = {
   deleteInvoice,
   findInvoiceById,
   getAllInvoice,
-  generateInvoiceCode
+  generateInvoiceCode,
 };
