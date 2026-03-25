@@ -10,8 +10,8 @@ const serializeTags = (data) => {
   if (data.tags) {
     data.tags = JSON.stringify(data.tags);
   }
-  if(!data.assigneeId){
-    data.assigneeId = Number(data.createdBy)
+  if (!data.assigneeId) {
+    data.assigneeId = Number(data.createdBy);
   }
   return data;
 };
@@ -37,7 +37,7 @@ const validateContactsExist = async (contactIds) => {
   if (contacts?.length !== contactIds.length) {
     throw new CustomError(
       "One or more contact IDs are invalid or do not exist.",
-      400
+      400,
     );
   }
 };
@@ -55,7 +55,7 @@ const getDealsWithReferences = async (id) => {
       DealHistory: true,
       deal_currency: true,
       deal_country: true,
-      deal_owner:true
+      deal_owner: true,
     },
   });
 
@@ -101,7 +101,7 @@ const createDeal = async (data) => {
           DealHistory: true,
           deal_currency: true,
           deal_country: true,
-          deal_owner:true,
+          deal_owner: true,
         },
       });
 
@@ -167,7 +167,7 @@ const updateDeal = async (id, data) => {
           DealHistory: true,
           deal_currency: true,
           deal_country: true,
-          deal_owner:true
+          deal_owner: true,
         },
       });
 
@@ -194,8 +194,7 @@ const findDealById = async (id) => {
         DealHistory: true,
         deal_currency: true,
         deal_country: true,
-        deal_owner:true
-
+        deal_owner: true,
       },
     });
     return parseTags(deal);
@@ -213,7 +212,7 @@ const getAllDeals = async (
   endDate,
   status,
   priority,
-  userId
+  userId,
 ) => {
   try {
     console.log("Page first Count : ", page);
@@ -257,8 +256,8 @@ const getAllDeals = async (
       filters.OR = [
         { createdBy: { equals: Number(userId.id) } },
         { updatedBy: { equals: Number(userId.id) } },
-        { assigneeId: { equals: Number(userId.id) } }
-      ]
+        { assigneeId: { equals: Number(userId.id) } },
+      ];
     }
 
     if (startDate && endDate) {
@@ -287,8 +286,7 @@ const getAllDeals = async (
         DealHistory: true,
         deal_currency: true,
         deal_country: true,
-        deal_owner:true
-
+        deal_owner: true,
       },
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
@@ -326,7 +324,7 @@ const deleteDeal = async (id) => {
       if (error.code === "P2003") {
         // Foreign key constraint failed
         throw new Error(
-          "Cannot delete this opportunity because related records exist. Please remove them first."
+          "Cannot delete this opportunity because related records exist. Please remove them first.",
         );
       }
       if (error.code === "P2025") {
@@ -340,7 +338,7 @@ const deleteDeal = async (id) => {
 const transferDealOwner = async (deal_ids, owner_id, userId) => {
   try {
     if (!Array.isArray(deal_ids) || deal_ids.length === 0) {
-      throw new CustomError('deal_ids must be a non-empty array', 400);
+      throw new CustomError("deal_ids must be a non-empty array", 400);
     }
     // Prepare update data
     let updateData = {
@@ -357,22 +355,22 @@ const transferDealOwner = async (deal_ids, owner_id, userId) => {
       where: {
         id: { in: deal_ids.map((id) => parseInt(id, 10)) },
       },
-      data: updateData
+      data: updateData,
     });
 
     // Fetch and return each lead with its relations
     const updatedDeals = await Promise.all(
       deal_ids.map(async (id) => {
         return await getDealsWithReferences(parseInt(id, 10));
-      })
+      }),
     );
 
     return updatedDeals;
   } catch (error) {
-    console.error('Error transferring deal owners:', error);
+    console.error("Error transferring deal owners:", error);
     throw new CustomError(
       `Failed to transfer deal ownership: ${error.message}`,
-      error.statusCode || 500
+      error.statusCode || 500,
     );
   }
 };
@@ -384,5 +382,5 @@ module.exports = {
   getAllDeals,
   deleteDeal,
   transferDealOwner,
-  transferDealOwner
+  transferDealOwner,
 };

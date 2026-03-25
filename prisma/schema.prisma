@@ -206,6 +206,8 @@ model Deal {
   logInst           Int?
   pipelineId        Int?
   stageId           Int?
+  email             String?
+  phone             String?
   deal_of_activity  crms_d_activities[]
   case_deal         crms_d_cases[]
   DealContacts      DealContacts[]
