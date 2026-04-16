@@ -35,8 +35,8 @@ const findDealById = async (id) => {
 const getDealListDashboardData = async (filterDays, user) => {
   try {
     const { startDate, endDate } = filterDays;
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
+    const startMoment = moment(startDate).startOf("day");
+    const endMoment = moment(endDate).endOf("day");
     const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
@@ -76,8 +76,8 @@ const getDealListDashboardData = async (filterDays, user) => {
 const getDealValueDashboardData = async (filterDays, user) => {
   try {
     const { startDate, endDate, stage_id, priority } = filterDays;
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
+    const startMoment = moment(startDate).startOf("day");
+    const endMoment = moment(endDate).endOf("day");
     const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
@@ -134,8 +134,8 @@ const getDealValueDashboardData = async (filterDays, user) => {
 const getDealWonDashboardData = async (filterDays, user) => {
   try {
     const { startDate, endDate } = filterDays;
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
+    const startMoment = moment(startDate).startOf("day");
+    const endMoment = moment(endDate).endOf("day");
     const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
@@ -180,8 +180,8 @@ const getDealWonDashboardData = async (filterDays, user) => {
 const getDealLossDashboardData = async (filterDays, user) => {
   try {
     const { startDate, endDate } = filterDays;
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
+    const startMoment = moment(startDate).startOf("day");
+    const endMoment = moment(endDate).endOf("day");
     const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
@@ -226,8 +226,8 @@ const getDealLossDashboardData = async (filterDays, user) => {
 const getMonthlyDealDashboardData = async (filterDays, user) => {
   try {
     const { startDate, endDate } = filterDays;
-    const startMoment = moment(startDate);
-    const endMoment = moment(endDate);
+    const startMoment = moment(startDate).startOf("day");
+    const endMoment = moment(endDate).endOf("day");
     const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
