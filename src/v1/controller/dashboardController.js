@@ -27,7 +27,7 @@ const getDealListDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const getAllData = await dashboardService.getDealListDashboardData(
-      req.query.filterDays,
+      req.query,
       user,
     );
     res.status(200).success(null, getAllData);
@@ -39,7 +39,7 @@ const getDealValueDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const getAllData = await dashboardService.getDealValueDashboardData(
-      req.query.filterDays,
+      req.query,
       user,
     );
     res.status(200).success(null, getAllData);
@@ -51,7 +51,7 @@ const getDealWonDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const getAllData = await dashboardService.getDealWonDashboardData(
-      req.query.filterDays,
+      req.query,
       user,
     );
     res.status(200).success(null, getAllData);
@@ -63,7 +63,7 @@ const getDealLossDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const getAllData = await dashboardService.getDealLossDashboardData(
-      req.query.filterDays,
+      req.query,
       user,
     );
     res.status(200).success(null, getAllData);
@@ -75,7 +75,7 @@ const getMonthlyDealDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     const getAllData = await dashboardService.getMonthlyDealDashboardData(
-      req.query.filterDays,
+      req.query,
       user,
     );
     res.status(200).success(null, getAllData);

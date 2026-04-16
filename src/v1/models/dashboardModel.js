@@ -75,7 +75,7 @@ const getDealListDashboardData = async (filterDays, user) => {
 };
 const getDealValueDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate } = filterDays;
+    const { startDate, endDate, stage_id, priority } = filterDays;
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
     const filters = {};
@@ -103,6 +103,12 @@ const getDealValueDashboardData = async (filterDays, user) => {
           }),
         ...(filterDays?.dealsPipelineFilter && {
           pipelineId: Number(filterDays?.dealsPipelineFilter),
+        }),
+        ...(stage_id && {
+          stage_id: Number(stage_id),
+        }),
+        ...(priority && {
+          priority: Number(priority),
         }),
       },
       include: {
