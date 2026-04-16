@@ -32,19 +32,18 @@ const findDealById = async (id) => {
 };
 
 // Get all deals
-const getDashboardData = async (filterDays,user) => {
+const getDealListDashboardData = async (filterDays, user) => {
   try {
-    console.log("User get : ",user)
     const { startDate, endDate } = filterDays;
     const startMoment = moment(startDate);
     const endMoment = moment(endDate);
-    const filters = {}
+    const filters = {};
     if (user && user.role !== "Admin") {
       filters.OR = [
         { createdBy: { equals: Number(user.id) } },
         { updatedBy: { equals: Number(user.id) } },
-        { assigneeId: { equals: Number(user.id) } }
-      ]
+        { assigneeId: { equals: Number(user.id) } },
+      ];
     }
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
@@ -62,18 +61,243 @@ const getDashboardData = async (filterDays,user) => {
         deals: true,
         pipeline: true,
       },
-     
+
+      orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
+    });
+
+    return {
+      deal: deal,
+    };
+  } catch (error) {
+    console.log("Dashboard getting error : ", error);
+    throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getDealValueDashboardData = async (filterDays, user) => {
+  try {
+    const { startDate, endDate } = filterDays;
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const filters = {};
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } },
+      ];
+    }
+
+    if (!startMoment.isValid() || !endMoment.isValid()) {
+      throw new Error("Invalid date range provided");
+    }
+
+    const deals = await prisma.Deal.findMany({
+      where: {
+        ...filters,
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.dealsPipelineFilter && {
+          pipelineId: Number(filterDays?.dealsPipelineFilter),
+        }),
+      },
+      include: {
+        deals: true,
+        pipeline: true,
+      },
+      orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
+    });
+
+    const formattedDeals = deals.map((deal) => {
+      const { deals, ...rest } = parseTags(deal); // Remove "deals" key
+      return { ...rest, stages: deal.deals || [] }; // Rename "stages" to "deals"
+    });
+
+    return {
+      deals: formattedDeals,
+    };
+  } catch (error) {
+    console.log("Dashboard getting error : ", error);
+    throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getDealWonDashboardData = async (filterDays, user) => {
+  try {
+    const { startDate, endDate } = filterDays;
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const filters = {};
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } },
+      ];
+    }
+
+    if (!startMoment.isValid() || !endMoment.isValid()) {
+      throw new Error("Invalid date range provided");
+    }
+    const dealsss = await prisma.Deal.findMany({
+      where: {
+        ...filters,
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.wonDealFilter && {
+          pipelineId: Number(filterDays?.wonDealFilter),
+        }),
+      },
+      include: {
+        deals: true,
+        pipeline: true,
+      },
+    });
+    const wonDeals = dealsss.filter((deal) => deal.status === "Won");
+
+    return {
+      wonDeals: wonDeals,
+    };
+  } catch (error) {
+    console.log("Dashboard getting error : ", error);
+    throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getDealLossDashboardData = async (filterDays, user) => {
+  try {
+    const { startDate, endDate } = filterDays;
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const filters = {};
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } },
+      ];
+    }
+
+    if (!startMoment.isValid() || !endMoment.isValid()) {
+      throw new Error("Invalid date range provided");
+    }
+    const dealssss = await prisma.Deal.findMany({
+      where: {
+        ...filters,
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.lostDealFilter && {
+          pipelineId: Number(filterDays?.lostDealFilter),
+        }),
+      },
+      include: {
+        deals: true,
+        pipeline: true,
+      },
+    });
+    const lostDeals = dealssss.filter((deal) => deal.status === "Lost");
+
+    return {
+      lostDeals: lostDeals,
+    };
+  } catch (error) {
+    console.log("Dashboard getting error : ", error);
+    throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getMonthlyDealDashboardData = async (filterDays, user) => {
+  try {
+    const { startDate, endDate } = filterDays;
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const filters = {};
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } },
+      ];
+    }
+
+    if (!startMoment.isValid() || !endMoment.isValid()) {
+      throw new Error("Invalid date range provided");
+    }
+
+    // Process deals to count them by month
+    const dealss = await prisma.Deal.findMany({
+      where: filterDays?.monthlyDealFilter && {
+        pipelineId: Number(filterDays?.monthlyDealFilter),
+      },
+    });
+    const monthlyDeals = {};
+    dealss.forEach((deal) => {
+      const month = new Date(deal.dueDate).getMonth() + 1; // Get month (1-12)
+      monthlyDeals[month] = (monthlyDeals[month] || 0) + (deal.dealValue || 0); // Sum dealValue
+    });
+
+    return {
+      monthlyDeals: monthlyDeals,
+    };
+  } catch (error) {
+    console.log("Dashboard getting error : ", error);
+    throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getDashboardData = async (filterDays, user) => {
+  try {
+    console.log("User get : ", user);
+    const { startDate, endDate } = filterDays;
+    const startMoment = moment(startDate);
+    const endMoment = moment(endDate);
+    const filters = {};
+    if (user && user.role !== "Admin") {
+      filters.OR = [
+        { createdBy: { equals: Number(user.id) } },
+        { updatedBy: { equals: Number(user.id) } },
+        { assigneeId: { equals: Number(user.id) } },
+      ];
+    }
+
+    if (!startMoment.isValid() || !endMoment.isValid()) {
+      throw new Error("Invalid date range provided");
+    }
+    const deal = await prisma.Deal.findMany({
+      where: {
+        ...filters,
+        createdDate: {
+          gte: startMoment.toDate(), // Get deals from the selected range
+          lte: endMoment.toDate(), // Get deals from the last `filterDays`
+        },
+      },
+      include: {
+        deals: true,
+        pipeline: true,
+      },
+
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const deals = await prisma.Deal.findMany({
       where: {
         ...filters,
-        ...(startMoment && endMoment && {
-          createdDate: {
-            gte: startMoment.toDate(),
-            lte: endMoment.toDate(),
-          },
-        }),
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
         ...(filterDays?.dealsPipelineFilter && {
           pipelineId: Number(filterDays?.dealsPipelineFilter),
         }),
@@ -85,18 +309,18 @@ const getDashboardData = async (filterDays,user) => {
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const dealsss = await prisma.Deal.findMany({
-      where:{
+      where: {
         ...filters,
-        ...(startMoment && endMoment && {
-        createdDate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      ...(filterDays?.wonDealFilter && {
-        pipelineId: Number(filterDays?.wonDealFilter),
-      }),
-      
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.wonDealFilter && {
+          pipelineId: Number(filterDays?.wonDealFilter),
+        }),
       },
       include: {
         deals: true,
@@ -105,15 +329,19 @@ const getDashboardData = async (filterDays,user) => {
     });
     const wonDeals = dealsss.filter((deal) => deal.status === "Won");
     const dealssss = await prisma.Deal.findMany({
-      where:{
+      where: {
         ...filters,
-        ...(startMoment && endMoment && {
-        createdDate: {
-          gte: startMoment.toDate(),
-          lte: endMoment.toDate(),
-        },
-      }),
-      ...(filterDays?.lostDealFilter && {pipelineId :Number(filterDays?.lostDealFilter)})},
+        ...(startMoment &&
+          endMoment && {
+            createdDate: {
+              gte: startMoment.toDate(),
+              lte: endMoment.toDate(),
+            },
+          }),
+        ...(filterDays?.lostDealFilter && {
+          pipelineId: Number(filterDays?.lostDealFilter),
+        }),
+      },
       include: {
         deals: true,
         pipeline: true,
@@ -123,7 +351,9 @@ const getDashboardData = async (filterDays,user) => {
 
     // Process deals to count them by month
     const dealss = await prisma.Deal.findMany({
-      where:(filterDays?.monthlyDealFilter && {pipelineId :Number(filterDays?.monthlyDealFilter)}),
+      where: filterDays?.monthlyDealFilter && {
+        pipelineId: Number(filterDays?.monthlyDealFilter),
+      },
     });
     const monthlyDeals = {};
     dealss.forEach((deal) => {
@@ -137,7 +367,7 @@ const getDashboardData = async (filterDays,user) => {
     });
 
     return {
-      deal:deal,
+      deal: deal,
       deals: formattedDeals,
       monthlyDeals: monthlyDeals,
       wonDeals: wonDeals,
@@ -151,4 +381,9 @@ const getDashboardData = async (filterDays,user) => {
 module.exports = {
   findDealById,
   getDashboardData,
+  getMonthlyDealDashboardData,
+  getDealLossDashboardData,
+  getDealWonDashboardData,
+  getDealValueDashboardData,
+  getDealListDashboardData,
 };
