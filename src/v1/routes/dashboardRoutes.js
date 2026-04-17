@@ -40,5 +40,10 @@ router.get(
   authenticateToken,
   dashboardController.getMonthlyDealDashboardData,
 );
+router.get(
+  "/dashboard-deal-generation",
+  authenticateToken,
+  dashboardController.getAchivedTargetDealGraph,
+);
 
 module.exports = router;

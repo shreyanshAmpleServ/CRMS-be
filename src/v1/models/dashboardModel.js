@@ -225,32 +225,52 @@ const getDealLossDashboardData = async (filterDays, user) => {
 };
 const getMonthlyDealDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate } = filterDays;
-    const startMoment = moment(startDate).startOf("day");
-    const endMoment = moment(endDate).endOf("day");
-    const filters = {};
+    const { year } = filterDays;
+
+    const whereClause = {};
+
+    // ✅ Apply pipeline filter
+    if (filterDays?.monthlyDealFilter) {
+      whereClause.pipelineId = Number(filterDays.monthlyDealFilter);
+    }
+
+    // ✅ Apply role-based filter
     if (user && user.role !== "Admin") {
-      filters.OR = [
-        { createdBy: { equals: Number(user.id) } },
-        { updatedBy: { equals: Number(user.id) } },
-        { assigneeId: { equals: Number(user.id) } },
+      whereClause.OR = [
+        { createdBy: Number(user.id) },
+        { updatedBy: Number(user.id) },
+        { assigneeId: Number(user.id) },
       ];
     }
 
-    if (!startMoment.isValid() || !endMoment.isValid()) {
-      throw new Error("Invalid date range provided");
+    // ✅ Apply year filter (IMPORTANT)
+    if (year) {
+      const startDate = new Date(`${year}-01-01T00:00:00.000Z`);
+      const endDate = new Date(`${year}-12-31T23:59:59.999Z`);
+
+      whereClause.dueDate = {
+        gte: startDate,
+        lte: endDate,
+      };
     }
 
-    // Process deals to count them by month
-    const dealss = await prisma.Deal.findMany({
-      where: filterDays?.monthlyDealFilter && {
-        pipelineId: Number(filterDays?.monthlyDealFilter),
+    // ✅ Fetch filtered deals
+    const deals = await prisma.Deal.findMany({
+      where: whereClause,
+      select: {
+        dueDate: true,
+        dealValue: true,
       },
     });
+
+    // ✅ Aggregate by month
     const monthlyDeals = {};
-    dealss.forEach((deal) => {
-      const month = new Date(deal.dueDate).getMonth() + 1; // Get month (1-12)
-      monthlyDeals[month] = (monthlyDeals[month] || 0) + (deal.dealValue || 0); // Sum dealValue
+
+    deals.forEach((deal) => {
+      if (!deal.dueDate) return;
+
+      const month = new Date(deal.dueDate).getMonth() + 1;
+      monthlyDeals[month] = (monthlyDeals[month] || 0) + (deal.dealValue || 0);
     });
 
     return {
@@ -259,6 +279,100 @@ const getMonthlyDealDashboardData = async (filterDays, user) => {
   } catch (error) {
     console.log("Dashboard getting error : ", error);
     throw new CustomError("Error retrieving dashboard", 503);
+  }
+};
+const getAchivedTargetDealGraph = async (filters, user) => {
+  try {
+    const { startDate, endDate, pipelineId, assigneeId, stageId } = filters;
+
+    const whereClause = {};
+
+    // ✅ Date Range Filter
+    if (startDate && endDate) {
+      whereClause.dueDate = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    // ✅ Pipeline Filter
+    if (pipelineId) {
+      whereClause.pipelineId = Number(pipelineId);
+    }
+
+    // ✅ Sales Rep Filter
+    if (assigneeId) {
+      whereClause.assigneeId = Number(assigneeId);
+    }
+
+    // ✅ Stage Filter
+    if (stageId) {
+      whereClause.stageId = Number(stageId);
+    }
+
+    // ✅ Role Filter
+    if (user && user.role !== "Admin") {
+      whereClause.OR = [
+        { createdBy: Number(user.id) },
+        { updatedBy: Number(user.id) },
+        { assigneeId: Number(user.id) },
+      ];
+    }
+
+    // ✅ Fetch Deals
+    const deals = await prisma.Deal.findMany({
+      where: whereClause,
+      select: {
+        dueDate: true,
+        dealValue: true,
+      },
+    });
+
+    // ✅ Initialize months
+    const months = Array(12).fill(0);
+
+    deals.forEach((deal) => {
+      if (!deal.dueDate) return;
+
+      const month = new Date(deal.dueDate).getMonth(); // 0–11
+      months[month] += deal.dealValue || 0;
+    });
+
+    // ✅ Target Logic
+    const yearlyTarget = 600;
+    const monthlyTarget = yearlyTarget / 12;
+
+    const targetData = Array(12).fill(monthlyTarget);
+
+    return {
+      categories: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
+      series: [
+        {
+          name: "Target",
+          data: targetData,
+        },
+        {
+          name: "Actual",
+          data: months,
+        },
+      ],
+    };
+  } catch (error) {
+    console.error("Opportunity Graph Error:", error);
+    throw new CustomError("Error fetching opportunity graph", 500);
   }
 };
 const getDashboardData = async (filterDays, user) => {
@@ -392,4 +506,5 @@ module.exports = {
   getDealWonDashboardData,
   getDealValueDashboardData,
   getDealListDashboardData,
+  getAchivedTargetDealGraph,
 };

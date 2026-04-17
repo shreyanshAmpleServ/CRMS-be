@@ -83,6 +83,18 @@ const getMonthlyDealDashboardData = async (req, res, next) => {
     next(error);
   }
 };
+const getAchivedTargetDealGraph = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const getAllData = await dashboardService.getAchivedTargetDealGraph(
+      req.query,
+      user,
+    );
+    res.status(200).success(null, getAllData);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   getDealById,
@@ -92,4 +104,5 @@ module.exports = {
   getDealWonDashboardData,
   getDealValueDashboardData,
   getDealListDashboardData,
+  getAchivedTargetDealGraph,
 };
