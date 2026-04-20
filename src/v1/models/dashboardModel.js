@@ -281,6 +281,100 @@ const getMonthlyDealDashboardData = async (filterDays, user) => {
     throw new CustomError("Error retrieving dashboard", 503);
   }
 };
+// const getAchivedTargetDealGraph = async (filters, user) => {
+//   try {
+//     const { startDate, endDate, pipelineId, assigneeId, stageId } = filters;
+
+//     const whereClause = {};
+
+//     // ✅ Date Range Filter
+//     if (startDate && endDate) {
+//       whereClause.dueDate = {
+//         gte: new Date(startDate),
+//         lte: new Date(endDate),
+//       };
+//     }
+
+//     // ✅ Pipeline Filter
+//     if (pipelineId) {
+//       whereClause.pipelineId = Number(pipelineId);
+//     }
+
+//     // ✅ Sales Rep Filter
+//     if (assigneeId) {
+//       whereClause.assigneeId = Number(assigneeId);
+//     }
+
+//     // ✅ Stage Filter
+//     if (stageId) {
+//       whereClause.stageId = Number(stageId);
+//     }
+
+//     // ✅ Role Filter
+//     if (user && user.role !== "Admin") {
+//       whereClause.OR = [
+//         { createdBy: Number(user.id) },
+//         { updatedBy: Number(user.id) },
+//         { assigneeId: Number(user.id) },
+//       ];
+//     }
+
+//     // ✅ Fetch Deals
+//     const deals = await prisma.Deal.findMany({
+//       where: whereClause,
+//       select: {
+//         dueDate: true,
+//         dealValue: true,
+//       },
+//     });
+
+//     // ✅ Initialize months
+//     const months = Array(12).fill(0);
+
+//     deals.forEach((deal) => {
+//       if (!deal.dueDate) return;
+
+//       const month = new Date(deal.dueDate).getMonth(); // 0–11
+//       months[month] += deal.dealValue || 0;
+//     });
+
+//     // ✅ Target Logic
+//     const yearlyTarget = 600;
+//     const monthlyTarget = yearlyTarget / 12;
+
+//     const targetData = Array(12).fill(monthlyTarget);
+
+//     return {
+//       categories: [
+//         "Jan",
+//         "Feb",
+//         "Mar",
+//         "Apr",
+//         "May",
+//         "Jun",
+//         "Jul",
+//         "Aug",
+//         "Sep",
+//         "Oct",
+//         "Nov",
+//         "Dec",
+//       ],
+//       series: [
+//         {
+//           name: "Target",
+//           data: targetData,
+//         },
+//         {
+//           name: "Actual",
+//           data: months,
+//         },
+//       ],
+//     };
+//   } catch (error) {
+//     console.error("Opportunity Graph Error:", error);
+//     throw new CustomError("Error fetching opportunity graph", 500);
+//   }
+// };
 const getAchivedTargetDealGraph = async (filters, user) => {
   try {
     const { startDate, endDate, pipelineId, assigneeId, stageId } = filters;
@@ -319,28 +413,27 @@ const getAchivedTargetDealGraph = async (filters, user) => {
       ];
     }
 
-    // ✅ Fetch Deals
+    // ✅ Fetch Deals (only need dueDate now)
     const deals = await prisma.Deal.findMany({
       where: whereClause,
       select: {
         dueDate: true,
-        dealValue: true,
       },
     });
 
-    // ✅ Initialize months
+    // ✅ Initialize months (count-based)
     const months = Array(12).fill(0);
 
     deals.forEach((deal) => {
       if (!deal.dueDate) return;
 
       const month = new Date(deal.dueDate).getMonth(); // 0–11
-      months[month] += deal.dealValue || 0;
+      months[month] += 1; // ✅ COUNT instead of VALUE
     });
 
-    // ✅ Target Logic
-    const yearlyTarget = 600;
-    const monthlyTarget = yearlyTarget / 12;
+    // ✅ Target Logic (count-based)
+    const yearlyTarget = 600; // total opportunities
+    const monthlyTarget = Math.round(yearlyTarget / 12);
 
     const targetData = Array(12).fill(monthlyTarget);
 
