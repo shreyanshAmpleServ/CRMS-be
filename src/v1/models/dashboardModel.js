@@ -34,7 +34,7 @@ const findDealById = async (id) => {
 // Get all deals
 const getDealListDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate } = filterDays;
+    const { startDate, endDate, dealsPipelineFilter } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -45,6 +45,7 @@ const getDealListDashboardData = async (filterDays, user) => {
         { assigneeId: { equals: Number(user.id) } },
       ];
     }
+    if (dealsPipelineFilter) filters.pipelineId = Number(dealsPipelineFilter);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -75,7 +76,14 @@ const getDealListDashboardData = async (filterDays, user) => {
 };
 const getDealValueDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate, stage_id, priority, assigneeId } = filterDays;
+    const {
+      startDate,
+      endDate,
+      stage_id,
+      priority,
+      assigneeId,
+      dealsPipelineFilter,
+    } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -87,6 +95,7 @@ const getDealValueDashboardData = async (filterDays, user) => {
       ];
     }
     if (assigneeId) filters.assigneeId = Number(assigneeId);
+    if (dealsPipelineFilter) filters.pipelineId = Number(dealsPipelineFilter);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -134,7 +143,7 @@ const getDealValueDashboardData = async (filterDays, user) => {
 };
 const getDealWonDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate, assigneeId } = filterDays;
+    const { startDate, endDate, assigneeId, dealsPipelineFilter } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -146,6 +155,7 @@ const getDealWonDashboardData = async (filterDays, user) => {
       ];
     }
     if (assigneeId) filters.assigneeId = Number(assigneeId);
+    if (dealsPipelineFilter) filters.pipelineId = Number(dealsPipelineFilter);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -181,7 +191,7 @@ const getDealWonDashboardData = async (filterDays, user) => {
 };
 const getDealLossDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate, assigneeId } = filterDays;
+    const { startDate, endDate, assigneeId, dealsPipelineFilter } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -193,6 +203,7 @@ const getDealLossDashboardData = async (filterDays, user) => {
       ];
     }
     if (assigneeId) filters.assigneeId = Number(assigneeId);
+    if (dealsPipelineFilter) filters.pipelineId = Number(dealsPipelineFilter);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -478,7 +489,7 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     const {
       startDate,
       endDate,
-      pipelineId,
+      dealsPipelineFilter,
       assigneeId, // Sales Rep
       stageId,
       yearTarget, // optional fallback if you don't store targets in DB
@@ -524,7 +535,8 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     // Use expectedCloseDate instead of closeDate
     whereClause.expectedCloseDate = { gte: start, lte: end };
 
-    if (pipelineId) whereClause.pipelineId = Number(pipelineId);
+    if (dealsPipelineFilter)
+      whereClause.pipelineId = Number(dealsPipelineFilter);
     if (assigneeId) whereClause.assigneeId = Number(assigneeId);
     if (stageId) whereClause.stageId = Number(stageId);
 
