@@ -118,7 +118,7 @@ const getDealValueDashboardData = async (filterDays, user) => {
           stage_id: Number(stage_id),
         }),
         ...(priority && {
-          priority: Number(priority),
+          priority: priority,
         }),
       },
       include: {
