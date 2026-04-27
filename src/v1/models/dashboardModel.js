@@ -492,7 +492,7 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
       dealsPipelineFilter,
       assigneeId, // Sales Rep
       stageId,
-      yearTarget, // optional fallback if you don't store targets in DB
+      yearFilter, // optional fallback if you don't store targets in DB
     } = filters;
 
     // -----------------------------
@@ -603,8 +603,8 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
       }
       */
 
-      // Option B (Fallback): use filters.yearTarget or a hardcoded yearly target
-      const fallbackYearlyTarget = Number(yearTarget || 250000); // like your image (250,000)
+      // Option B (Fallback): use filters.yearFilter or a hardcoded yearly target
+      const fallbackYearlyTarget = Number(yearFilter || 250000); // like your image (250,000)
       if (monthlyTarget == null) monthlyTarget = fallbackYearlyTarget / 12;
 
       targetData.push(Math.round(monthlyTarget));
