@@ -75,7 +75,7 @@ const getDealListDashboardData = async (filterDays, user) => {
 };
 const getDealValueDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate, stage_id, priority } = filterDays;
+    const { startDate, endDate, stage_id, priority, assigneeId } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -86,6 +86,7 @@ const getDealValueDashboardData = async (filterDays, user) => {
         { assigneeId: { equals: Number(user.id) } },
       ];
     }
+    if (assigneeId) filters.assigneeId = Number(assigneeId);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -133,7 +134,7 @@ const getDealValueDashboardData = async (filterDays, user) => {
 };
 const getDealWonDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate } = filterDays;
+    const { startDate, endDate, assigneeId } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -144,6 +145,7 @@ const getDealWonDashboardData = async (filterDays, user) => {
         { assigneeId: { equals: Number(user.id) } },
       ];
     }
+    if (assigneeId) filters.assigneeId = Number(assigneeId);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -179,7 +181,7 @@ const getDealWonDashboardData = async (filterDays, user) => {
 };
 const getDealLossDashboardData = async (filterDays, user) => {
   try {
-    const { startDate, endDate } = filterDays;
+    const { startDate, endDate, assigneeId } = filterDays;
     const startMoment = moment(startDate).startOf("day");
     const endMoment = moment(endDate).endOf("day");
     const filters = {};
@@ -190,6 +192,7 @@ const getDealLossDashboardData = async (filterDays, user) => {
         { assigneeId: { equals: Number(user.id) } },
       ];
     }
+    if (assigneeId) filters.assigneeId = Number(assigneeId);
 
     if (!startMoment.isValid() || !endMoment.isValid()) {
       throw new Error("Invalid date range provided");
@@ -225,7 +228,7 @@ const getDealLossDashboardData = async (filterDays, user) => {
 };
 const getMonthlyDealDashboardData = async (filterDays, user) => {
   try {
-    const { year } = filterDays;
+    const { year, assigneeId } = filterDays;
 
     const whereClause = {};
 
@@ -242,6 +245,7 @@ const getMonthlyDealDashboardData = async (filterDays, user) => {
         { assigneeId: Number(user.id) },
       ];
     }
+    if (assigneeId) whereClause.assigneeId = Number(assigneeId);
 
     // ✅ Apply year filter (IMPORTANT)
     if (year) {
@@ -477,7 +481,7 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
       pipelineId,
       assigneeId, // Sales Rep
       stageId,
-      yearTarget, // optional fallback if you don’t store targets in DB
+      yearTarget, // optional fallback if you don't store targets in DB
     } = filters;
 
     // -----------------------------
@@ -514,9 +518,11 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     // -----------------------------
     const whereClause = {};
 
-    // Date filter (IMPORTANT: use your “achieved” date field)
-    // Replace `closeDate` with your actual field: closeDate / closedAt / wonAt / updatedAt etc.
-    whereClause.closeDate = { gte: start, lte: end };
+    // Only include closed/won deals (assuming "Closed" or "Won" status)
+    whereClause.status = "Closed"; // or "Won" - adjust based on your status values
+
+    // Use expectedCloseDate instead of closeDate
+    whereClause.expectedCloseDate = { gte: start, lte: end };
 
     if (pipelineId) whereClause.pipelineId = Number(pipelineId);
     if (assigneeId) whereClause.assigneeId = Number(assigneeId);
@@ -532,13 +538,13 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     }
 
     // -----------------------------
-    // 3) Fetch deals (Achieved = SUM of amount per month)
+    // 3) Fetch deals (Achieved = SUM of dealValue per month)
     // -----------------------------
     const deals = await prisma.Deal.findMany({
       where: whereClause,
       select: {
-        closeDate: true, // <-- replace if needed
-        amount: true, // <-- replace with your value field (value/dealValue/expectedRevenue)
+        expectedCloseDate: true, // Changed from closeDate
+        dealValue: true, // Changed from amount
       },
     });
 
@@ -547,13 +553,13 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     monthKeys.forEach((k) => (achievedMap[k] = 0));
 
     deals.forEach((d) => {
-      if (!d.closeDate) return;
-      const dt = new Date(d.closeDate);
+      if (!d.expectedCloseDate) return;
+      const dt = new Date(d.expectedCloseDate);
       const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
 
       if (achievedMap[key] == null) return;
 
-      achievedMap[key] += Number(d.amount || 0);
+      achievedMap[key] += Number(d.dealValue || 0);
     });
 
     const achievedData = monthKeys.map((k) => achievedMap[k]);
@@ -561,13 +567,6 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     // -----------------------------
     // 4) Target logic
     // -----------------------------
-    // Option A (Recommended): Fetch target from DB per Sales Rep + Year (+ monthly distribution)
-    // Example schema assumption:
-    // SalesTarget: { userId, year, yearlyTarget, monthlyDistribution (Json) }
-    //
-    // monthlyDistribution example:
-    // { "01": 20833, "02": 20833, ... "12": 20833 }
-
     const targetData = [];
     for (const key of monthKeys) {
       const [yStr, mm] = key.split("-");
@@ -578,7 +577,7 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
 
       let monthlyTarget = null;
 
-      // If you HAVE a table, uncomment & adapt:
+      // If you HAVE a SalesTarget table, uncomment & adapt:
       /*
       const targetRow = await prisma.SalesTarget.findFirst({
         where: { userId: targetUserId, year },
@@ -621,6 +620,159 @@ const getSalesTargetVsAchievedGraph = async (filters, user) => {
     throw new CustomError("Error fetching Sales Target vs Achieved graph", 500);
   }
 };
+
+// const getSalesTargetVsAchievedGraph = async (filters, user) => {
+//   try {
+//     const {
+//       startDate,
+//       endDate,
+//       pipelineId,
+//       assigneeId, // Sales Rep
+//       stageId,
+//       yearTarget, // optional fallback if you don’t store targets in DB
+//     } = filters;
+
+//     // -----------------------------
+//     // 1) Build Date Range
+//     // -----------------------------
+//     const start = startDate
+//       ? new Date(startDate)
+//       : new Date(new Date().getFullYear(), 0, 1);
+//     const end = endDate
+//       ? new Date(endDate)
+//       : new Date(new Date().getFullYear(), 11, 31);
+
+//     // Helper: month list between start & end (inclusive)
+//     const monthKeys = [];
+//     const categories = [];
+//     const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+//     while (cursor <= end) {
+//       const y = cursor.getFullYear();
+//       const m = cursor.getMonth(); // 0-11
+
+//       monthKeys.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+//       categories.push(
+//         cursor.toLocaleString("en-US", { month: "short" }) +
+//           "-" +
+//           String(y).slice(2),
+//       );
+
+//       cursor.setMonth(cursor.getMonth() + 1);
+//     }
+
+//     // -----------------------------
+//     // 2) Build WHERE clause (Deals)
+//     // -----------------------------
+//     const whereClause = {};
+
+//     // Date filter (IMPORTANT: use your “achieved” date field)
+//     // Replace `closeDate` with your actual field: closeDate / closedAt / wonAt / updatedAt etc.
+//     whereClause.closeDate = { gte: start, lte: end };
+
+//     if (pipelineId) whereClause.pipelineId = Number(pipelineId);
+//     if (assigneeId) whereClause.assigneeId = Number(assigneeId);
+//     if (stageId) whereClause.stageId = Number(stageId);
+
+//     // Role-based access (same pattern you used)
+//     if (user && user.role !== "Admin") {
+//       whereClause.OR = [
+//         { createdBy: Number(user.id) },
+//         { updatedBy: Number(user.id) },
+//         { assigneeId: Number(user.id) },
+//       ];
+//     }
+
+//     // -----------------------------
+//     // 3) Fetch deals (Achieved = SUM of amount per month)
+//     // -----------------------------
+//     const deals = await prisma.Deal.findMany({
+//       where: whereClause,
+//       select: {
+//         closeDate: true, // <-- replace if needed
+//         amount: true, // <-- replace with your value field (value/dealValue/expectedRevenue)
+//       },
+//     });
+
+//     // Init achieved map for all months
+//     const achievedMap = {};
+//     monthKeys.forEach((k) => (achievedMap[k] = 0));
+
+//     deals.forEach((d) => {
+//       if (!d.closeDate) return;
+//       const dt = new Date(d.closeDate);
+//       const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+
+//       if (achievedMap[key] == null) return;
+
+//       achievedMap[key] += Number(d.amount || 0);
+//     });
+
+//     const achievedData = monthKeys.map((k) => achievedMap[k]);
+
+//     // -----------------------------
+//     // 4) Target logic
+//     // -----------------------------
+//     // Option A (Recommended): Fetch target from DB per Sales Rep + Year (+ monthly distribution)
+//     // Example schema assumption:
+//     // SalesTarget: { userId, year, yearlyTarget, monthlyDistribution (Json) }
+//     //
+//     // monthlyDistribution example:
+//     // { "01": 20833, "02": 20833, ... "12": 20833 }
+
+//     const targetData = [];
+//     for (const key of monthKeys) {
+//       const [yStr, mm] = key.split("-");
+//       const year = Number(yStr);
+
+//       // Try to get rep target for that year (assigneeId preferred, else current user)
+//       const targetUserId = assigneeId ? Number(assigneeId) : Number(user?.id);
+
+//       let monthlyTarget = null;
+
+//       // If you HAVE a table, uncomment & adapt:
+//       /*
+//       const targetRow = await prisma.SalesTarget.findFirst({
+//         where: { userId: targetUserId, year },
+//         select: { yearlyTarget: true, monthlyDistribution: true },
+//       });
+
+//       if (targetRow?.monthlyDistribution?.[mm] != null) {
+//         monthlyTarget = Number(targetRow.monthlyDistribution[mm]);
+//       } else if (targetRow?.yearlyTarget != null) {
+//         monthlyTarget = Number(targetRow.yearlyTarget) / 12;
+//       }
+//       */
+
+//       // Option B (Fallback): use filters.yearTarget or a hardcoded yearly target
+//       const fallbackYearlyTarget = Number(yearTarget || 250000); // like your image (250,000)
+//       if (monthlyTarget == null) monthlyTarget = fallbackYearlyTarget / 12;
+
+//       targetData.push(Math.round(monthlyTarget));
+//     }
+
+//     // Totals (for table footer)
+//     const totalTarget = targetData.reduce((a, b) => a + b, 0);
+//     const totalAchieved = achievedData.reduce((a, b) => a + b, 0);
+
+//     return {
+//       categories, // ["Jan-22", "Feb-22", ...]
+//       series: [
+//         { name: "Target", data: targetData },
+//         { name: "Achieved", data: achievedData },
+//       ],
+//       table: monthKeys.map((k, idx) => ({
+//         month: categories[idx],
+//         target: targetData[idx],
+//         achieved: achievedData[idx],
+//       })),
+//       totals: { target: totalTarget, achieved: totalAchieved },
+//     };
+//   } catch (error) {
+//     console.error("Sales Target vs Achieved Error:", error);
+//     throw new CustomError("Error fetching Sales Target vs Achieved graph", 500);
+//   }
+// };
 const getDashboardData = async (filterDays, user) => {
   try {
     console.log("User get : ", user);
