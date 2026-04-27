@@ -24,6 +24,9 @@ const getMonthlyDealDashboardData = async (filterDays, user) => {
 const getAchivedTargetDealGraph = async (filterDays, user) => {
   return await dashboardModel.getAchivedTargetDealGraph(filterDays, user);
 };
+const getSalesTargetVsAchievedGraph = async (filterDays, user) => {
+  return await dashboardModel.getSalesTargetVsAchievedGraph(filterDays, user);
+};
 
 module.exports = {
   findDealById,
@@ -34,4 +37,5 @@ module.exports = {
   getDealValueDashboardData,
   getDealListDashboardData,
   getAchivedTargetDealGraph,
+  getSalesTargetVsAchievedGraph,
 };

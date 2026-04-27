@@ -45,5 +45,10 @@ router.get(
   authenticateToken,
   dashboardController.getAchivedTargetDealGraph,
 );
+router.get(
+  "/dashboard-deal-achievement",
+  authenticateToken,
+  dashboardController.getSalesTargetVsAchievedGraph,
+);
 
 module.exports = router;

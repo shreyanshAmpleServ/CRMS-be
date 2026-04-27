@@ -95,6 +95,18 @@ const getAchivedTargetDealGraph = async (req, res, next) => {
     next(error);
   }
 };
+const getSalesTargetVsAchievedGraph = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const getAllData = await dashboardService.getSalesTargetVsAchievedGraph(
+      req.query,
+      user,
+    );
+    res.status(200).success(null, getAllData);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   getDealById,
@@ -105,4 +117,5 @@ module.exports = {
   getDealValueDashboardData,
   getDealListDashboardData,
   getAchivedTargetDealGraph,
+  getSalesTargetVsAchievedGraph,
 };
